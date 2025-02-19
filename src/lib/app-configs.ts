@@ -4,4 +4,6 @@ export const AppConfigs = {
     "Projeto desenvolvido para a disciplina de AAP-VI da Fatec de Barueri.",
   language: "pt_BR",
   locale: "pt-BR",
+
+  main_api_url: process.env.NEXT_PUBLIC_MAIN_API_URL,
 };

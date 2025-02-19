@@ -1,5 +1,5 @@
 import { AppProviders } from "@/components/app-providers";
-import { AppConfigs } from "@/lib/constants/app-configs";
+import { AppConfigs } from "@/lib/app-configs";
 
 import type { Metadata } from "next";
 

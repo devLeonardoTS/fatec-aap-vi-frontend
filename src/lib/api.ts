@@ -1,4 +1,5 @@
 import axios from "axios";
+import { AppConfigs } from "./app-configs";
 
 /*
  * Axios é uma biblioteca que permite fazer requisições HTTP (GET, POST, etc.)
@@ -10,5 +11,5 @@ import axios from "axios";
  */
 
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_MAIN_API_URL,
+  baseURL: AppConfigs.main_api_url,
 });
