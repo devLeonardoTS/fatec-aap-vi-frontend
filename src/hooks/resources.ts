@@ -10,6 +10,7 @@ export type UseGetResourceOptions<T = any> = {
   enabled?: boolean;
   refetchOnWindowFocus?: boolean;
   retry?: boolean;
+  refetchInterval?: any;
 };
 
 export type UseCreateResource<T = any> = {
@@ -45,6 +46,7 @@ export function useGetResource<T = any>({
   enabled = true,
   refetchOnWindowFocus = false,
   retry = false,
+  refetchInterval = false,
 }: UseGetResourceOptions) {
   const controller = new AbortController();
 
@@ -72,6 +74,7 @@ export function useGetResource<T = any>({
     staleTime: 0,
     refetchOnWindowFocus,
     enabled,
+    refetchInterval,
   });
 
   function abort(onAbort = () => {}) {
