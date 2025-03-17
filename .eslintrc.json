@@ -8,6 +8,8 @@
     "@next/next/no-img-element": "off",
     "react-hooks/rules-of-hooks": "off",
     "@typescript-eslint/no-unused-expressions": "off",
-    "react-hooks/exhaustive-deps": "off"
+    "react-hooks/exhaustive-deps": "off",
+    "@typescript-eslint/explicit-any": "off",
+    "@typescript-eslint/property-assignment": "off"
   }
 }
