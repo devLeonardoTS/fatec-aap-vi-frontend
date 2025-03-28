@@ -17,9 +17,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang={AppConfigs.locale}>
-      <AppProviders>
-        <body className={`antialiased`}>{children}</body>
-      </AppProviders>
+      <body id="app" className={`antialiased`}>
+        <AppProviders>{children}</AppProviders>
+      </body>
     </html>
   );
 }

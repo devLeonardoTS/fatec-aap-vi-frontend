@@ -1,21 +1,79 @@
-@tailwind base;
+@layer tailwind-base, tailwind-utilities;
+
+@layer tailwind-base {
+  @tailwind base;
+}
+
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+    --background: #ffffff;
+    --foreground: #171717;
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+    --color-primary: #250177;
+    --color-secondary: #800000;
+
+    --color-neutral-light: #ede9dd;
+    --color-neutral-white: #ffffff;
+    --color-neutral-black: #000000;
+
+    /* Text Colors */
+    --color-text-primary: var(--color-neutral-black);
+    --color-text-secondary: var(--color-neutral-light);
+    --color-text-on-primary: var(--color-neutral-white);
+    --color-text-on-secondary: var(--color-neutral-white);
+
+    /* Background Colors */
+    --color-background-primary: var(--color-neutral-light);
+    --color-background-secondary: var(--color-neutral-white);
+    --color-background-accent: var(--color-secondary);
+
+    /* Accent/UI Colors (Optional but good to consider expanding) */
+    --color-accent: var(--color-secondary);
+    --color-success: #4caf50;
+    --color-error: #f44336;
+    --color-warning: #ffc107;
+    --color-info: #2196f3;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: #0a0a0a;
+      --foreground: #ededed;
+
+      /* Adjust Neutral Colors for Dark Mode - Invert or Darken/Lighten Appropriately */
+      --color-neutral-light: #333333;
+      --color-neutral-white: #171717;
+      --color-neutral-black: #ededed;
+
+      /* Text Colors - Update based on new neutrals */
+      --color-text-primary: var(--color-neutral-black);
+      --color-text-secondary: #a0a0a0;
+      --color-text-on-primary: var(--color-neutral-white);
+      --color-text-on-secondary: var(--color-neutral-white);
+
+      /* Background Colors - Adjust based on new neutrals */
+      --color-background-primary: #171717;
+      --color-background-secondary: #222222;
+      --color-background-accent: #a00000;
+
+      /* Brand Colors - Consider Muting/Adjusting for Dark Mode (Optional but Recommended) */
+      --color-primary: #4a2299;
+      --color-secondary: #a00000;
+
+      /* Accent/UI Colors - You might need to adjust these too if they rely on light mode colors */
+      --color-success: #6fbb70;
+      --color-error: #e57373;
+      --color-warning: #ffda6a;
+      --color-info: #64b5f6;
+    }
+  }
+
+  body {
+    color: var(--foreground);
+    background: var(--background);
+    font-family: Arial, Helvetica, sans-serif;
+  }
 }
