@@ -19,3 +19,15 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+#innerBoxSmall {
+  max-height: 30px;
+}
+
+#innerBoxMed {
+  max-height: 120px;
+}
+
+#innerBoxBig {
+  max-height: 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  00px;
+}
