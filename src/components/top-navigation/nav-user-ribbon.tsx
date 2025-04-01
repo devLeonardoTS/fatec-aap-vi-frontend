@@ -1,8 +1,10 @@
 export function NavUserRibbon() {
   return (
-    <div className="text-sm my-1 flex justify-between">
-      <div>Bem-vindo usuário!</div>
-      <div>Login</div>
-    </div>
+    <nav className="p-2 px-4">
+      <div className="max-w-7xl mx-auto flex justify-between items-center">
+        <div>Bem-vindo usuário!</div>
+        <div>Login</div>
+      </div>
+    </nav>
   );
 }

@@ -30,10 +30,16 @@ export function Sitemap() {
           </div>
 
           <div className="flex justify-center space-x-4">
-            <a href="#" className="hover:text-white/80">
+            <a
+              href="https://www.instagram.com/invalve_hidrocontrolador"
+              className="hover:text-white/80"
+            >
               <SiInstagram size={20} />
             </a>
-            <a href="#" className="hover:text-white/80">
+            <a
+              href="https://www.linkedin.com/in/invalve-hidrocontrolador/"
+              className="hover:text-white/80"
+            >
               <LuLinkedin size={20} />
             </a>
           </div>
