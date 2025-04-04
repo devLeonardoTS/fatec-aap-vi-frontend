@@ -5,7 +5,7 @@ import { ChevronDown, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-export function NavMainRibbon() {
+export function NavMainRibbon({ isFluid = true }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -62,7 +62,11 @@ export function NavMainRibbon() {
 
   return (
     <nav className="p-2">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
+      <div
+        className={`flex justify-between items-center ${
+          isFluid ? "" : "max-w-7xl mx-auto"
+        }`}
+      >
         {/* Logo */}
         <div className="flex-shrink-0">
           <Link href="/" className="flex items-center">

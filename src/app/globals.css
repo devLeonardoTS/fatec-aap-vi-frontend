@@ -43,4 +43,8 @@
     background: var(--background);
     font-family: Arial, Helvetica, sans-serif;
   }
+
+  .nav-button-link {
+    @apply p-0 m-0 text-sm rounded-full transition duration-300 hover:text-blue-500;
+  }
 }

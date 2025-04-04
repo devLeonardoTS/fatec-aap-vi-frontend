@@ -1,8 +1,11 @@
 "use client";
 
 import { getQueryClient } from "@/lib/utils/get-query-client";
+import { createTheme, MantineProvider } from "@mantine/core";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { PrimeReactProvider } from "primereact/api";
 import React, { PropsWithChildren } from "react";
+import { ToastContainer } from "react-toastify";
 
 /** Detalhe dos Wrappers que envolvem a aplicação.
  *
@@ -13,12 +16,27 @@ import React, { PropsWithChildren } from "react";
  *   páginas da aplicação.
  */
 
+const theme = createTheme({
+  /** Put your mantine theme override here */
+});
+
 export function AppProviders({ children }: PropsWithChildren) {
   const queryClient = getQueryClient();
 
+  const primeReactConfig = {
+    ripple: true,
+  };
+
   return (
     <React.StrictMode>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <PrimeReactProvider value={primeReactConfig}>
+          <MantineProvider theme={theme}>
+            {children}
+            <ToastContainer />
+          </MantineProvider>
+        </PrimeReactProvider>
+      </QueryClientProvider>
     </React.StrictMode>
   );
 }
