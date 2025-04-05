@@ -10,7 +10,7 @@ export const MainApiBaseUrl = process.env.NEXT_PUBLIC_MAIN_API_URL || "";
 
 export const ApiRoutes = {
   post_login: `/auth/login`,
-  post_register: `/auth/register`,
+  post_register: `/users`,
 
   get_me: `/users/me`,
 

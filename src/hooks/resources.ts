@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { parseAxiosError } from "@/lib/utils/parse-axios-errors";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export type UseGetResourceOptions<T = any> = {
@@ -119,8 +120,17 @@ export function useCreateResource<T = any>({
         signal: controller.signal,
       });
     },
-    onSuccess,
-    onError,
+    onSuccess(data) {
+      // Dispatch on success cb.
+      onSuccess(data);
+    },
+    onError(error, variables, context) {
+      // Dispatch on error cb.
+
+      // console.log("[Hooks:resources:useCreateResource] - onError:", error);
+
+      if (error?.name === "AxiosError") throw parseAxiosError(error);
+    },
     onSettled: (data, error, variables, context) => {
       onSettled({ data, error, variables, context });
     },
