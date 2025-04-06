@@ -120,7 +120,7 @@ export function useCreateResource<T = any>({
         signal: controller.signal,
       });
     },
-    onSuccess(data) {
+    onSuccess({ data }) {
       // Dispatch on success cb.
       onSuccess(data);
     },

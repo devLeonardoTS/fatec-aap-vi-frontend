@@ -34,6 +34,8 @@ function LoginFormModal({ opened, close: closeModal }) {
 
   const [formData, setFormData] = useState(initForm);
 
+  const [errors, setErrors] = useState(initForm);
+
   const [showPassword, setShowPassword] = useState(false);
 
   const toggleShowPassword = () => setShowPassword((prev) => !prev);
@@ -62,13 +64,49 @@ function LoginFormModal({ opened, close: closeModal }) {
     e.preventDefault();
     e.stopPropagation();
 
+    // Clear errors on submit.
+    setErrors(initForm);
+
     console.log("Payload", formData);
 
     await toast.promise(
-      loginUserAsync(formData).then(handleCloseModal),
+      loginUserAsync(formData)
+        .then(({ data }) => {
+          const profile = data?.data?.user?.profile;
+
+          toast.success(`Seja bem-vindo(a) ${profile?.full_name}!`, {
+            position: "top-center",
+          });
+
+          handleCloseModal();
+        })
+        .catch((error) => {
+          console.log("Backend errors: ", error);
+
+          const { message, errors } = error?.data ?? {};
+
+          // If validation errors are found, set errors.
+          const backendValidated = Object.fromEntries(
+            Object.entries(errors ?? {}).map(([key, values]) => [
+              key,
+              values?.[0],
+            ])
+          );
+
+          setErrors((prev) => ({
+            ...prev,
+            ...backendValidated,
+          }));
+
+          if (errors) return;
+
+          // If no validation errors, show generic error message.
+          toast.error(
+            "Não foi possível autenticar o usuário no momento. Tente novamente mais tarde."
+          );
+        }),
       {
         pending: "Carregando...",
-        success: "Seja bem-vindo(a)!",
         error:
           "Não foi possível fazer login no momento, tente novamente mais tarde...",
       },
@@ -102,6 +140,9 @@ function LoginFormModal({ opened, close: closeModal }) {
             value={formData.email}
             onChange={handleChange("email")}
           />
+          {errors.email && (
+            <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+          )}
         </label>
         <label className="block">
           <span className="block text-sm font-medium text-gray-700">Senha</span>
@@ -113,6 +154,9 @@ function LoginFormModal({ opened, close: closeModal }) {
               value={formData.password}
               onChange={handleChange("password")}
             />
+            {errors.password && (
+              <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+            )}
             <button
               type="button"
               className="absolute inset-y-0 right-0 px-2 text-black border-l p-ripple"

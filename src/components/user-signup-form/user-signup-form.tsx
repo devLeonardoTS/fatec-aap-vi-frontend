@@ -9,26 +9,66 @@ import Link from "next/link";
 import { useState } from "react";
 import { toast } from "react-toastify";
 
+import * as Yup from "yup";
+
+const minFullNameChars = 3;
+const maxEmailChars = 255;
+const minPasswordChars = 8;
+
+const signUpValidationSchema = Yup.object().shape({
+  full_name: Yup.string()
+    .required("O campo do nome completo é obrigatório.")
+    .min(
+      minFullNameChars,
+      `O campo do nome completo deve ter pelo menos ${minFullNameChars} caracteres.`
+    )
+    .typeError("O campo do nome completo deve ser uma string."),
+  email: Yup.string()
+    .required("O campo do e-mail é obrigatório.")
+    .email("O campo do e-mail deve ser um e-mail.")
+    .max(
+      maxEmailChars,
+      `O campo do e-mail deve ter no máximo ${maxEmailChars} caracteres.`
+    )
+    .typeError("O campo do e-mail deve ser uma string."),
+  password: Yup.string()
+    .required("O campo da senha é obrigatório.")
+    .oneOf(
+      [Yup.ref("password_confirmation"), null],
+      "As senhas devem ser iguais."
+    )
+    .min(
+      minPasswordChars,
+      `O campo da senha deve ter pelo menos ${minPasswordChars} caracteres.`
+    )
+    .typeError("O campo da senha deve ser uma string."),
+  password_confirmation: Yup.string()
+    .required("O campo da confirmação da senha é obrigatório.")
+    .typeError("O campo da senha deve ser uma string."),
+});
+
 export function UserSignUpForm() {
   const initForm = {
     full_name: "",
     email: "",
     password: "",
-    password_confirm: "",
+    password_confirmation: "",
   };
 
   const [formData, setFormData] = useState(initForm);
 
-  // Todo: Form Validation with Yup
-  const errors = { ...initForm };
+  const [errors, setErrors] = useState(initForm);
 
   const { createResourceAsync: signUpUserAsync, isLoading: isSigningUser } =
     useCreateResource({
       key: RequestKeys.CREATE_USER,
       route: ApiRoutes.post_register,
-      // onError(error: any) {
-      //   console.log("Error onError", error);
-      // },
+    });
+
+  const { createResourceAsync: loginUserAsync, isLoading: IsLogingUser } =
+    useCreateResource({
+      key: RequestKeys.LOGIN,
+      route: ApiRoutes.post_login,
     });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,23 +79,92 @@ export function UserSignUpForm() {
     }));
   };
 
+  async function handleLogin(formData: any) {
+    console.log("[handleLogin::start]", formData);
+
+    toast.promise(
+      loginUserAsync(formData).then(({ data }) => {
+        console.log("[handleLogin::success]", data);
+      }),
+      {
+        pending: "Carregando seu perfil...",
+        success: "Seja bem-vindo(a)!",
+        error:
+          "Não foi possível fazer login no momento, tente novamente mais tarde...",
+      },
+      {
+        position: "top-center",
+      }
+    );
+  }
+
+  async function handleSignUp(formData: any) {
+    // Send payload to backend.
+    console.log("handleSignUp", formData);
+    toast
+      .promise(signUpUserAsync(formData), {
+        pending: "Cadastrando usuário...",
+        // success: "Pedido de cadastro de usuário enviado com sucesso",
+      })
+      .then(({ data }) => {
+        handleLogin(formData);
+      })
+      .catch((error) => {
+        console.log("Backend errors: ", error);
+
+        const { message, errors } = error?.data ?? {};
+
+        // If validation errors are found, set errors.
+        const backendValidated = Object.fromEntries(
+          Object.entries(errors ?? {}).map(([key, values]) => [
+            key,
+            values?.[0],
+          ])
+        );
+
+        setErrors((prev) => ({
+          ...prev,
+          ...backendValidated,
+        }));
+
+        if (errors) return;
+
+        // If no validation errors, show generic error message.
+        toast.error(
+          "Não foi possível cadastrar o usuário no momento. Tente novamente mais tarde."
+        );
+      });
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    console.log("Payload", formData);
+    // console.log("Payload", formData);
 
-    toast
-      .promise(signUpUserAsync(formData), {
-        pending: "Enviando pedido de cadastro de usuário...",
-        success: "Pedido de cadastro de usuário enviado com sucesso",
-      })
-      .catch((error) => {
-        // Fix this error handling;
-        console.log(error);
-        const { errors = [] } = error?.data ?? {};
-        toast.error(errors[0] ?? "Não foi possível cadastrar o usuário");
+    // Clear errors on submit.
+    setErrors(initForm);
+
+    // Do Client Side validation.
+    try {
+      signUpValidationSchema.validateSync(formData, {
+        abortEarly: false,
       });
+    } catch (error) {
+      const errorsObj = error.inner.reduce((acc, curr) => {
+        acc[curr.path] = curr.message;
+        return acc;
+      }, {});
+
+      setErrors((prev) => ({
+        ...prev,
+        ...errorsObj,
+      }));
+
+      if (errors) return;
+    }
+
+    handleSignUp(formData);
   };
 
   return (
@@ -144,26 +253,28 @@ export function UserSignUpForm() {
 
             <div>
               <label
-                htmlFor="password_confirm"
+                htmlFor="password_confirmation"
                 className="block text-sm font-medium text-gray-700"
               >
                 Confirme a senha
               </label>
               <input
-                id="password_confirm"
-                name="password_confirm"
+                id="password_confirmation"
+                name="password_confirmation"
                 type="password"
                 autoComplete="new-password"
-                value={formData.password_confirm}
+                value={formData.password_confirmation}
                 onChange={handleChange}
                 className={`mt-1 block w-full px-3 py-2 border ${
-                  errors.password_confirm ? "border-red-300" : "border-gray-300"
+                  errors.password_confirmation
+                    ? "border-red-300"
+                    : "border-gray-300"
                 } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm`}
                 placeholder="••••••••"
               />
-              {errors.password_confirm && (
+              {errors.password_confirmation && (
                 <p className="mt-1 text-sm text-red-600">
-                  {errors.password_confirm}
+                  {errors.password_confirmation}
                 </p>
               )}
             </div>
