@@ -1,9 +1,6 @@
 import { useAuth } from "@/hooks/auth";
-import { useGetResource } from "@/hooks/resources";
-import { RequestKeys } from "@/lib/constants/request_keys";
-import { ApiRoutes } from "@/lib/routes/api.routes";
 import { getAuthorizationCookie } from "@/lib/utils/api-helpers";
-import { createContext, useContext, useLayoutEffect } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect } from "react";
 
 type AuthContextType = {
   // Define your context properties here
@@ -21,43 +18,39 @@ type AuthContextType = {
       updated_at: string;
     };
   };
-  isLoadingUser: boolean;
-  errors: any;
+  isLoggingIn: boolean;
+  loginFormErrors: any;
 
-  login: (data: any) => any;
-  logout: () => void;
+  login: (credentials: { email: string; password: string }) => any;
+  refresh: () => any;
+  logout: () => any;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }) {
-  const {
-    data: user,
-    isLoading: isLoadingUser,
-    refetch: refreshUser,
-  } = useGetResource({
-    key: RequestKeys.REFRESH_USER,
-    route: ApiRoutes.get_me,
-    enabled: false,
-  });
-
-  const { login, logout, errors } = useAuth({
-    onLogin: refreshUser,
-    onLogout: refreshUser,
-  });
+  const { isLoggingIn, loginFormErrors, user, login, refresh, logout } =
+    useAuth();
 
   useLayoutEffect(() => {
-    if (getAuthorizationCookie()) {
-      refreshUser();
+    const hasAuthCookie = getAuthorizationCookie();
+
+    if (user && hasAuthCookie) {
+      console.log("Refreshing Session...");
+      refresh();
     }
   }, []);
 
-  const provided = {
-    user,
-    isLoadingUser,
-    errors,
+  useEffect(() => {
+    console.log("Authenticated User: ", user);
+  }, [user]);
 
+  const provided = {
+    isLoggingIn,
+    loginFormErrors,
+    user,
     login,
+    refresh,
     logout,
   };
 

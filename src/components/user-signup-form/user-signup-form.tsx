@@ -3,16 +3,18 @@
 import type React from "react";
 
 import { useCreateResource, useGetResource } from "@/hooks/resources";
-import { RequestKeys } from "@/lib/constants/request_keys";
+import { RequestKeys } from "@/lib/constants/request-keys";
 import { ApiRoutes } from "@/lib/routes/api.routes";
 import Link from "next/link";
-import { useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { toast } from "react-toastify";
 
+import { NavRoutes } from "@/lib/routes/nav.routes";
 import {
   handleBackendValidations,
   handleFrontendValidations,
 } from "@/lib/utils/validation-handlers";
+import { useRouter } from "next/navigation";
 import * as Yup from "yup";
 import { useAuthContext } from "../auth-context";
 
@@ -53,6 +55,8 @@ const signUpValidationSchema = Yup.object().shape({
 });
 
 export function UserSignUpForm() {
+  const router = useRouter();
+
   const initForm = {
     full_name: "",
     email: "",
@@ -70,17 +74,15 @@ export function UserSignUpForm() {
       route: ApiRoutes.post_register,
     });
 
-  const { login, logout, user, isLoadingUser } = useAuthContext();
+  const { isLoggingIn, user, login } = useAuthContext();
 
-  // const { login, logout } = useAuth({ refreshUser });
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
-  };
+  }
 
   async function handleSignUp(formData: any) {
     // Send payload to backend.
@@ -113,7 +115,7 @@ export function UserSignUpForm() {
       });
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     e.stopPropagation();
 
@@ -137,7 +139,7 @@ export function UserSignUpForm() {
     if (hasErrors) return;
 
     handleSignUp(formData);
-  };
+  }
 
   const {
     data: protectedData,
@@ -149,11 +151,11 @@ export function UserSignUpForm() {
     // enabled: false,
   });
 
-  // async function callProtectedArea() {
-  //   await refetch();
+  useLayoutEffect(() => {
+    if (user) router.push(NavRoutes.home);
+  }, [user]);
 
-  //   console.log("[callProtectedArea]", protectedData);
-  // }
+  if (user) return null;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-6 sm:px-6 lg:px-8">

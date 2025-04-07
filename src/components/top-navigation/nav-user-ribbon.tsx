@@ -20,7 +20,7 @@ function LogoutButton() {
 }
 
 export function NavUserRibbon({ isFluid = false }) {
-  const { user } = useAuthContext();
+  const { user, isLoggingIn } = useAuthContext();
 
   return (
     <nav className="p-2 px-4">
@@ -29,11 +29,13 @@ export function NavUserRibbon({ isFluid = false }) {
           isFluid ? "" : "max-w-7xl mx-auto"
         }`}
       >
-        <div>Bem-vindo usuário!</div>
+        <p>
+          Bem-vindo(a) ao inValve
+          {user ? ", " + user?.profile?.full_name + "!" : ""}
+        </p>
 
         <div className="space-x-4">
           {!user && <LoginButton />}
-
           {user && <LogoutButton />}
         </div>
       </div>

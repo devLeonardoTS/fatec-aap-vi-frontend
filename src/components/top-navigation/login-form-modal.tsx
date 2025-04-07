@@ -32,21 +32,12 @@ function LoginFormModal({ opened, close: closeModal }) {
 
   const [formData, setFormData] = useState(initForm);
 
-  // const [errors, setErrors] = useState(initForm);
-
   const [showPassword, setShowPassword] = useState(false);
 
   const toggleShowPassword = () => setShowPassword((prev) => !prev);
 
-  // const { createResourceAsync: loginUserAsync, isLoading: IsLogingUser } =
-  //   useCreateResource({
-  //     key: RequestKeys.LOGIN,
-  //     route: ApiRoutes.post_login,
-  //   });
-
-  const { login, logout, user, errors, isLoadingUser } = useAuthContext();
-
-  // const { login, logout, errors } = useAuth({ refreshUser });
+  const { login, logout, user, loginFormErrors, isLoggingIn } =
+    useAuthContext();
 
   const handleChange =
     (name: keyof typeof formData) =>
@@ -62,7 +53,6 @@ function LoginFormModal({ opened, close: closeModal }) {
     setFormData(initForm);
   }
 
-  // Todo: this, should be a hook.
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     e.stopPropagation();
@@ -96,8 +86,8 @@ function LoginFormModal({ opened, close: closeModal }) {
             value={formData.email}
             onChange={handleChange("email")}
           />
-          {errors.email && (
-            <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+          {loginFormErrors.email && (
+            <p className="mt-1 text-sm text-red-600">{loginFormErrors.email}</p>
           )}
         </label>
         <label className="block">
@@ -124,8 +114,10 @@ function LoginFormModal({ opened, close: closeModal }) {
                 }}
               />
             </button>
-            {errors.password && (
-              <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+            {loginFormErrors.password && (
+              <p className="mt-1 text-sm text-red-600">
+                {loginFormErrors.password}
+              </p>
             )}
           </div>
         </label>

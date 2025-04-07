@@ -41,8 +41,6 @@ const initializeCSRFToken = () => {
 const initializeJWToken = () => {
   const jwtToken = getCookie("BEARER-TOKEN");
 
-  console.log("Initializing JWT Token: ", jwtToken);
-
   if (jwtToken) {
     api.defaults.headers.common["Authorization"] = jwtToken;
   }
