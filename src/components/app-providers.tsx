@@ -6,6 +6,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { PrimeReactProvider } from "primereact/api";
 import React, { PropsWithChildren } from "react";
 import { ToastContainer } from "react-toastify";
+import { AuthProvider } from "./auth-context";
 
 /** Detalhe dos Wrappers que envolvem a aplicação.
  *
@@ -32,8 +33,8 @@ export function AppProviders({ children }: PropsWithChildren) {
       <QueryClientProvider client={queryClient}>
         <PrimeReactProvider value={primeReactConfig}>
           <MantineProvider theme={theme}>
-            {children}
-            <ToastContainer />
+            <AuthProvider>{children}</AuthProvider>
+            <ToastContainer position="top-center" closeOnClick />
           </MantineProvider>
         </PrimeReactProvider>
       </QueryClientProvider>

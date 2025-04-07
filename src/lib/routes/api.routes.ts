@@ -12,7 +12,7 @@ export const ApiRoutes = {
   post_login: `/auth/login`,
   post_register: `/users`,
 
-  get_me: `/users/me`,
+  get_me: `/auth/user`,
 
   get_all_messages: `/messages`,
   post_new_message: `/messages`,

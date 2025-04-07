@@ -2,14 +2,19 @@
 
 import type React from "react";
 
-import { useCreateResource } from "@/hooks/resources";
+import { useCreateResource, useGetResource } from "@/hooks/resources";
 import { RequestKeys } from "@/lib/constants/request_keys";
 import { ApiRoutes } from "@/lib/routes/api.routes";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "react-toastify";
 
+import {
+  handleBackendValidations,
+  handleFrontendValidations,
+} from "@/lib/utils/validation-handlers";
 import * as Yup from "yup";
+import { useAuthContext } from "../auth-context";
 
 const minFullNameChars = 3;
 const maxEmailChars = 255;
@@ -65,11 +70,9 @@ export function UserSignUpForm() {
       route: ApiRoutes.post_register,
     });
 
-  const { createResourceAsync: loginUserAsync, isLoading: IsLogingUser } =
-    useCreateResource({
-      key: RequestKeys.LOGIN,
-      route: ApiRoutes.post_login,
-    });
+  const { login, logout, user, isLoadingUser } = useAuthContext();
+
+  // const { login, logout } = useAuth({ refreshUser });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -78,25 +81,6 @@ export function UserSignUpForm() {
       [name]: value,
     }));
   };
-
-  async function handleLogin(formData: any) {
-    console.log("[handleLogin::start]", formData);
-
-    toast.promise(
-      loginUserAsync(formData).then(({ data }) => {
-        console.log("[handleLogin::success]", data);
-      }),
-      {
-        pending: "Carregando seu perfil...",
-        success: "Seja bem-vindo(a)!",
-        error:
-          "Não foi possível fazer login no momento, tente novamente mais tarde...",
-      },
-      {
-        position: "top-center",
-      }
-    );
-  }
 
   async function handleSignUp(formData: any) {
     // Send payload to backend.
@@ -107,24 +91,17 @@ export function UserSignUpForm() {
         // success: "Pedido de cadastro de usuário enviado com sucesso",
       })
       .then(({ data }) => {
-        handleLogin(formData);
+        login({ email: formData.email, password: formData.password });
+        setFormData(initForm);
       })
       .catch((error) => {
         console.log("Backend errors: ", error);
 
-        const { message, errors } = error?.data ?? {};
-
-        // If validation errors are found, set errors.
-        const backendValidated = Object.fromEntries(
-          Object.entries(errors ?? {}).map(([key, values]) => [
-            key,
-            values?.[0],
-          ])
-        );
+        const backendValidations = handleBackendValidations(error);
 
         setErrors((prev) => ({
           ...prev,
-          ...backendValidated,
+          ...backendValidations,
         }));
 
         if (errors) return;
@@ -146,26 +123,37 @@ export function UserSignUpForm() {
     setErrors(initForm);
 
     // Do Client Side validation.
-    try {
-      signUpValidationSchema.validateSync(formData, {
-        abortEarly: false,
-      });
-    } catch (error) {
-      const errorsObj = error.inner.reduce((acc, curr) => {
-        acc[curr.path] = curr.message;
-        return acc;
-      }, {});
+    const frontendValidations = handleFrontendValidations(
+      signUpValidationSchema,
+      formData
+    );
 
-      setErrors((prev) => ({
-        ...prev,
-        ...errorsObj,
-      }));
+    setErrors((prev) => ({
+      ...prev,
+      ...frontendValidations,
+    }));
 
-      if (errors) return;
-    }
+    const hasErrors = Object.values(errors).some((value) => value?.length > 0);
+    if (hasErrors) return;
 
     handleSignUp(formData);
   };
+
+  const {
+    data: protectedData,
+    isLoading: isLoadingProtected,
+    refetch,
+  } = useGetResource({
+    key: "ANY:PROTECTED",
+    route: "/protected",
+    // enabled: false,
+  });
+
+  // async function callProtectedArea() {
+  //   await refetch();
+
+  //   console.log("[callProtectedArea]", protectedData);
+  // }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-6 sm:px-6 lg:px-8">

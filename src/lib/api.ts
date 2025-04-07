@@ -38,8 +38,21 @@ const initializeCSRFToken = () => {
   }
 };
 
+const initializeJWToken = () => {
+  const jwtToken = getCookie("BEARER-TOKEN");
+
+  console.log("Initializing JWT Token: ", jwtToken);
+
+  if (jwtToken) {
+    api.defaults.headers.common["Authorization"] = jwtToken;
+  }
+};
+
 // Chamada da função de inicialização para setar o token CSRF se ele já estiver disponível
 initializeCSRFToken();
+
+// Chamada da função de inicialização para setar o token JWT se ele já estiver disponível
+initializeJWToken();
 
 // Variável para rastrear solicitações de tokens CSRF em andamento
 let csrfRequest: Promise<any> | null = null;

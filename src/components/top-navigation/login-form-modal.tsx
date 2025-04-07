@@ -1,8 +1,5 @@
 "use client";
 
-import { useCreateResource } from "@/hooks/resources";
-import { RequestKeys } from "@/lib/constants/request_keys";
-import { ApiRoutes } from "@/lib/routes/api.routes";
 import { NavRoutes } from "@/lib/routes/nav.routes";
 import { Modal } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -11,6 +8,7 @@ import Link from "next/link";
 import { Ripple } from "primereact/ripple";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import { useAuthContext } from "../auth-context";
 
 export function LoginButton() {
   const [opened, { open, close }] = useDisclosure(false);
@@ -34,17 +32,21 @@ function LoginFormModal({ opened, close: closeModal }) {
 
   const [formData, setFormData] = useState(initForm);
 
-  const [errors, setErrors] = useState(initForm);
+  // const [errors, setErrors] = useState(initForm);
 
   const [showPassword, setShowPassword] = useState(false);
 
   const toggleShowPassword = () => setShowPassword((prev) => !prev);
 
-  const { createResourceAsync: loginUserAsync, isLoading: IsLogingUser } =
-    useCreateResource({
-      key: RequestKeys.LOGIN,
-      route: ApiRoutes.post_login,
-    });
+  // const { createResourceAsync: loginUserAsync, isLoading: IsLogingUser } =
+  //   useCreateResource({
+  //     key: RequestKeys.LOGIN,
+  //     route: ApiRoutes.post_login,
+  //   });
+
+  const { login, logout, user, errors, isLoadingUser } = useAuthContext();
+
+  // const { login, logout, errors } = useAuth({ refreshUser });
 
   const handleChange =
     (name: keyof typeof formData) =>
@@ -60,60 +62,14 @@ function LoginFormModal({ opened, close: closeModal }) {
     setFormData(initForm);
   }
 
+  // Todo: this, should be a hook.
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     e.stopPropagation();
 
-    // Clear errors on submit.
-    setErrors(initForm);
+    login({ email: formData.email, password: formData.password });
 
-    console.log("Payload", formData);
-
-    await toast.promise(
-      loginUserAsync(formData)
-        .then(({ data }) => {
-          const profile = data?.data?.user?.profile;
-
-          toast.success(`Seja bem-vindo(a) ${profile?.full_name}!`, {
-            position: "top-center",
-          });
-
-          handleCloseModal();
-        })
-        .catch((error) => {
-          console.log("Backend errors: ", error);
-
-          const { message, errors } = error?.data ?? {};
-
-          // If validation errors are found, set errors.
-          const backendValidated = Object.fromEntries(
-            Object.entries(errors ?? {}).map(([key, values]) => [
-              key,
-              values?.[0],
-            ])
-          );
-
-          setErrors((prev) => ({
-            ...prev,
-            ...backendValidated,
-          }));
-
-          if (errors) return;
-
-          // If no validation errors, show generic error message.
-          toast.error(
-            "Não foi possível autenticar o usuário no momento. Tente novamente mais tarde."
-          );
-        }),
-      {
-        pending: "Carregando...",
-        error:
-          "Não foi possível fazer login no momento, tente novamente mais tarde...",
-      },
-      {
-        position: "top-center",
-      }
-    );
+    handleCloseModal();
   }
 
   return (
@@ -154,9 +110,6 @@ function LoginFormModal({ opened, close: closeModal }) {
               value={formData.password}
               onChange={handleChange("password")}
             />
-            {errors.password && (
-              <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-            )}
             <button
               type="button"
               className="absolute inset-y-0 right-0 px-2 text-black border-l p-ripple"
@@ -171,6 +124,9 @@ function LoginFormModal({ opened, close: closeModal }) {
                 }}
               />
             </button>
+            {errors.password && (
+              <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+            )}
           </div>
         </label>
 
@@ -183,7 +139,6 @@ function LoginFormModal({ opened, close: closeModal }) {
               e.stopPropagation();
 
               toast("Ainda estamos trabalhando nisso!", {
-                position: "top-center",
                 draggable: true,
               });
             }}
