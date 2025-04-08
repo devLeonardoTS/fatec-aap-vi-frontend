@@ -1,6 +1,6 @@
 export default function AboutUs() {
   return (
-    <div className="flex flex-col max-w-6xl mx-auto my-8">
+    <div className="flex flex-col max-w-6xl mx-auto my-4 p-4">
       <h1 className="text-4xl font-bold text-zinc-800 mb-4 text-center">
         inValve: Hidrocontrolador
       </h1>
@@ -10,7 +10,7 @@ export default function AboutUs() {
         missão.
       </p>
 
-      <div className="grid grid-cols-2 grid-rows-2 gap-8 mb-8 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 grid-rows-2 gap-8 mb-8 items-start">
         {/* Grid configuration for "A" */}
         <div className="bg-stone-100 p-6 rounded-lg row-span-2 h-full">
           <h2 className="text-2xl font-bold text-zinc-800 mb-4 flex items-center">
@@ -182,7 +182,7 @@ export default function AboutUs() {
       </div>
 
       {/* Grid configuration for "D" */}
-      <div className="bg-stone-100 p-6 rounded-lg mb-4">
+      <div className="bg-stone-100 p-6 rounded-lg mb-8">
         <h2 className="text-2xl font-bold text-zinc-800 mb-4 flex items-center">
           <span className="bg-red-600 w-2 h-8 mr-3 inline-block"></span>
           Sobre Nós

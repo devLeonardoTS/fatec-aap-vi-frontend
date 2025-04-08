@@ -1,13 +1,13 @@
 "use client";
 
-import { PropsWithChildren, useEffect, useState } from "react";
+import { PropsWithChildren, useLayoutEffect, useState } from "react";
 import { WaterLoading } from "../common/water-loading";
 
-export function HydrationProvider({ children }: PropsWithChildren<{}>) {
+export function HydrationVerifier({ children }: PropsWithChildren<{}>) {
   const [isHydrated, setIsHydrated] = useState(false);
 
   // Wait till Next.js rehydration completes
-  useEffect(() => {
+  useLayoutEffect(() => {
     setIsHydrated(true);
   }, []);
 

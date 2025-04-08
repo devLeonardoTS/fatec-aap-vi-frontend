@@ -20,12 +20,13 @@ export type SessionStoreType = {
       updated_at: string;
     };
   };
+  flashMessage: string;
 };
 
 export type SessionStoreActions = {
   setUser: (user: any) => void;
 
-  dispatchToast: (toast: any) => void;
+  setFlashMessage: (message: string) => void;
 };
 
 export type SessionStore = SessionStoreType & SessionStoreActions;
@@ -35,13 +36,16 @@ export const useSessionStore = create<SessionStore>()(
     (set, get) => {
       const dfts: SessionStoreType = {
         user: null,
+        flashMessage: "",
       };
 
       return {
         user: dfts.user,
+        flashMessage: dfts.flashMessage,
         setUser: (user) => set({ user }),
-        dispatchToast: (toast) => {
-          toast();
+        setFlashMessage: (message) => {
+          console.log("Message was set: ", message);
+          set({ flashMessage: message });
         },
       };
     },
@@ -49,7 +53,10 @@ export const useSessionStore = create<SessionStore>()(
       name: Constants.KEY_SESSION_STORE as string,
       storage: createJSONStorage(() => localStorage),
       version: Constants.VERSION_SESSION_STORE as number,
-      partialize: (state) => ({ user: state.user }),
+      partialize: (state) => ({
+        user: state.user,
+        flashMessage: state.flashMessage,
+      }),
       merge(persistedState, currentState) {
         return _.merge(currentState, persistedState);
       },

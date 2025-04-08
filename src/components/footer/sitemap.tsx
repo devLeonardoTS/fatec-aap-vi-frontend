@@ -1,3 +1,4 @@
+import { NavRoutes } from "@/lib/routes/nav.routes";
 import { SiInstagram } from "@icons-pack/react-simple-icons";
 import { LuLinkedin } from "react-icons/lu";
 
@@ -58,7 +59,7 @@ export function Sitemap({ isFluid = false }) {
               </a>
             </li>
             <li>
-              <a href="#" className="hover:underline">
+              <a href={NavRoutes.about_us} className="hover:underline">
                 Sobre nós
               </a>
             </li>

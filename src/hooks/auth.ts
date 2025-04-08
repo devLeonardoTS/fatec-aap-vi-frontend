@@ -47,7 +47,7 @@ export function useAuth() {
 
     await loginUserAsync({ email, password })
       .then(({ data }) => {
-        console.log("Login Response: ", data);
+        // console.log("Login Response: ", data);
 
         const user = data?.data?.user;
         const profile = user?.profile;
@@ -80,6 +80,10 @@ export function useAuth() {
           autoClose: 5000,
           closeButton: true,
         });
+
+        if (user) {
+          router.push(NavRoutes.dashboard);
+        }
       })
       .catch((error) => {
         const backendValidationErrors = handleBackendValidations(error);
@@ -110,10 +114,6 @@ export function useAuth() {
           closeButton: true,
         });
       });
-
-    if (user) {
-      router.push(NavRoutes.dashboard);
-    }
   }
 
   async function refresh() {
@@ -152,109 +152,3 @@ export function useAuth() {
     logout,
   };
 }
-
-// export const useAuth = () => {
-//   const [errors, setErrors] = useState<any>({});
-
-//   const { createResourceAsync: loginUserAsync, isLoading: isLoadingUser } =
-//     useCreateResource({
-//       key: RequestKeys.LOGIN,
-//       route: ApiRoutes.post_login,
-//     });
-
-//   const {
-//     data: userData,
-//     isLoading: isRefreshingSession,
-//     refetch,
-//   } = useGetResource({
-//     key: RequestKeys.REFRESH_USER,
-//     route: ApiRoutes.get_me,
-//     enabled: false,
-//   });
-
-//   const login = async ({ email, password }) => {
-//     setErrors({});
-
-//     toast.loading("Carregando seu perfil...", {
-//       toastId: authToastId,
-//     });
-
-//     await loginUserAsync({ email, password })
-//       .then(({ data }) => {
-//         const user = data?.data?.user;
-//         const profile = user?.profile;
-
-//         const token_type = data?.data?.token_type;
-//         const token = data?.data?.token;
-
-//         if (!token_type || !token) {
-//           toast.update(authToastId, {
-//             render:
-//               "Não foi possível autenticar o usuário no momento. Tente novamente mais tarde.",
-//             isLoading: false,
-//             type: "error",
-//             autoClose: 5000,
-//             closeButton: true,
-//           });
-//           deleteAuthorizationCookie();
-//           return;
-//         }
-
-//         setAuthorizationCookie(
-//           `${data?.data?.token_type} ${data?.data?.token}`
-//         );
-
-//         toast.update(authToastId, {
-//           render: `Seja bem-vindo(a) ${profile?.full_name}!`,
-//           isLoading: false,
-//           type: "success",
-//           autoClose: 5000,
-//           closeButton: true,
-//         });
-
-//         onLogin(user);
-//       })
-//       .catch((error) => {
-//         const backendValidationErrors = handleBackendValidations(error);
-
-//         setErrors((prev) => ({
-//           ...prev,
-//           ...backendValidationErrors,
-//         }));
-
-//         if (errors) {
-//           toast.update(authToastId, {
-//             render: "Verifique os campos e tente novamente.",
-//             isLoading: false,
-//             type: "error",
-//             autoClose: 5000,
-//             closeButton: true,
-//           });
-//           return;
-//         }
-
-//         // If no validation errors, show generic error message.
-//         toast.update(authToastId, {
-//           render:
-//             "Não foi possível autenticar o usuário no momento. Tente novamente mais tarde.",
-//           isLoading: false,
-//           type: "error",
-//           autoClose: 5000,
-//           closeButton: true,
-//         });
-//       });
-//   };
-
-//   const refresh = async () => {
-//     console.log("[useAuth::refresh] - refetching...");
-//     await refetch();
-//   };
-
-//   const logout = async () => {
-//     await deleteAuthorizationCookie();
-//     await refresh();
-//     toast.success("Logout efetuado com sucesso!");
-//   };
-
-//   return { login, logout, errors, isLoadingUser };
-// };

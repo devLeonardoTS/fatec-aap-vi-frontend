@@ -20,14 +20,13 @@ interface DashboardProviderProps {
 export function DashboardProvider({ children }: DashboardProviderProps) {
   const router = useRouter();
 
-  const { user, dispatchToast } = useSessionStore();
+  const { user, setFlashMessage: setMessage } = useSessionStore();
 
   const provided = {};
 
   useLayoutEffect(() => {
     if (!user) {
-      // Todo: Fix this
-      // toast.info("É necessário estar autenticado para visualizar essa página.");
+      setMessage("Você precisa estar autenticado para visualizar essa página");
       router.back();
     }
   }, [user]);

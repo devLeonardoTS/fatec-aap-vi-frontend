@@ -4,4 +4,6 @@ export const NavRoutes = {
   user_sign_up: "/sign-up",
 
   dashboard: "/dashboard",
+
+  about_us: "/sobre-nos",
 };
