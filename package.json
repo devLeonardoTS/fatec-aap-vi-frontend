@@ -23,6 +23,7 @@
     "@tiptap/pm": "^2.11.7",
     "@tiptap/react": "^2.11.7",
     "@tiptap/starter-kit": "^2.11.7",
+    "aap-vi-fe": "file:",
     "axios": "^1.7.9",
     "framer-motion": "^12.6.2",
     "lodash": "^4.17.21",
