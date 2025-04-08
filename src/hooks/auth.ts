@@ -1,11 +1,13 @@
 import { RequestKeys } from "@/lib/constants/request-keys";
 import { ApiRoutes } from "@/lib/routes/api.routes";
+import { NavRoutes } from "@/lib/routes/nav.routes";
 import {
   deleteAuthorizationCookie,
   setAuthorizationCookie,
 } from "@/lib/utils/api-helpers";
 import { handleBackendValidations } from "@/lib/utils/validation-handlers";
 import { useSessionStore } from "@/stores/session-store";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { useCreateResource, useGetResource } from "./resources";
@@ -13,6 +15,8 @@ import { useCreateResource, useGetResource } from "./resources";
 const authToastId = "TOAST:AUTH";
 
 export function useAuth() {
+  const router = useRouter();
+
   const { user, setUser } = useSessionStore();
 
   const [loginFormErrors, setLoginFormErrors] = useState<any>({});
@@ -106,6 +110,10 @@ export function useAuth() {
           closeButton: true,
         });
       });
+
+    if (user) {
+      router.push(NavRoutes.dashboard);
+    }
   }
 
   async function refresh() {
