@@ -1,5 +1,7 @@
 "use client";
 
+import { NavRoutes } from "@/lib/routes/nav.routes";
+import Link from "next/link";
 import { useAuthContext } from "../auth-context";
 import { LoginButton } from "./login-form-modal";
 
@@ -15,6 +17,16 @@ function LogoutButton() {
       <button onClick={handleLogout} className="nav-button-link">
         Logout
       </button>
+    </>
+  );
+}
+
+function MyDashboardButton() {
+  return (
+    <>
+      <Link href={NavRoutes.dashboard} className="nav-button-link">
+        Dashboard
+      </Link>
     </>
   );
 }
@@ -36,7 +48,12 @@ export function NavUserRibbon({ isFluid = false }) {
 
         <div className="space-x-4">
           {!user && <LoginButton />}
-          {user && <LogoutButton />}
+          {user && (
+            <>
+              <MyDashboardButton />
+              <LogoutButton />
+            </>
+          )}
         </div>
       </div>
     </nav>

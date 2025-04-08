@@ -24,6 +24,8 @@ export type SessionStoreType = {
 
 export type SessionStoreActions = {
   setUser: (user: any) => void;
+
+  dispatchToast: (toast: any) => void;
 };
 
 export type SessionStore = SessionStoreType & SessionStoreActions;
@@ -38,6 +40,9 @@ export const useSessionStore = create<SessionStore>()(
       return {
         user: dfts.user,
         setUser: (user) => set({ user }),
+        dispatchToast: (toast) => {
+          toast();
+        },
       };
     },
     {

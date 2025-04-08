@@ -13,8 +13,6 @@ import { useCreateResource, useGetResource } from "./resources";
 const authToastId = "TOAST:AUTH";
 
 export function useAuth() {
-  // const [user, setUser] = useState<any>(null);
-
   const { user, setUser } = useSessionStore();
 
   const [loginFormErrors, setLoginFormErrors] = useState<any>({});
