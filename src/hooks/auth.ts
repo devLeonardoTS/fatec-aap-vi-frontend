@@ -132,6 +132,8 @@ export function useAuth() {
   }
 
   async function logout() {
+    router.push(NavRoutes.home);
+
     toast
       .promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
         pending: "Encerrando sessão...",
