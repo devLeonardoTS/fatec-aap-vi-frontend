@@ -31,6 +31,16 @@ function MyDashboardButton() {
   );
 }
 
+function SupportButton() {
+  return (
+    <>
+      <Link href={""} className="nav-button-link">
+        Suporte
+      </Link>
+    </>
+  );
+}
+
 export function NavUserRibbon({ isFluid = false }) {
   const { user, isLoggingIn } = useAuthContext();
 
@@ -51,6 +61,7 @@ export function NavUserRibbon({ isFluid = false }) {
           {user && (
             <>
               <MyDashboardButton />
+              <SupportButton />
               <LogoutButton />
             </>
           )}
