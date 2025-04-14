@@ -1,10 +1,10 @@
 "use client";
 
 import {
-  useCreateResource,
   useGetResource,
+  usePostResource,
   useResourceRefresher,
-} from "@/hooks/resources";
+} from "@/hooks/request-handlers";
 import { ApiRoutes } from "@/lib/routes/api.routes";
 import { Send } from "lucide-react";
 import { useState } from "react";
@@ -17,11 +17,13 @@ interface Message {
 }
 
 function SendMessageForm() {
-  const { createResourceAsync, isLoading: isCreatingMessage } =
-    useCreateResource({
-      key: "CREATE:MESSAGE",
-      route: ApiRoutes.post_new_message,
-    });
+  const {
+    postResourceAsync: createResourceAsync,
+    isLoading: isCreatingMessage,
+  } = usePostResource({
+    key: "CREATE:MESSAGE",
+    route: ApiRoutes.post_new_message,
+  });
 
   const [messageContent, setMessageContent] = useState("");
 

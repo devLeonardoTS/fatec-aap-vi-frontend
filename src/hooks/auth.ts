@@ -10,7 +10,7 @@ import { useSessionStore } from "@/stores/session-store";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { useCreateResource, useGetResource } from "./resources";
+import { useGetResource, usePostResource } from "./request-handlers";
 
 const authToastId = "TOAST:AUTH";
 
@@ -21,8 +21,8 @@ export function useAuth() {
 
   const [loginFormErrors, setLoginFormErrors] = useState<any>({});
 
-  const { createResourceAsync: loginUserAsync, isLoading: isLoggingIn } =
-    useCreateResource({
+  const { postResourceAsync: loginUserAsync, isLoading: isLoggingIn } =
+    usePostResource({
       key: RequestKeys.LOGIN,
       route: ApiRoutes.post_login,
     });
@@ -126,7 +126,7 @@ export function useAuth() {
       return;
     }
 
-    console.log("Refreshed User Data: ", data);
+    // console.log("Refreshed User Data: ", data);
 
     setUser(data);
   }

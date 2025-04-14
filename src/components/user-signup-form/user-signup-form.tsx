@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useCreateResource, useGetResource } from "@/hooks/resources";
+import { useGetResource, usePostResource } from "@/hooks/request-handlers";
 import { RequestKeys } from "@/lib/constants/request-keys";
 import { ApiRoutes } from "@/lib/routes/api.routes";
 import Link from "next/link";
@@ -68,8 +68,8 @@ export function UserSignUpForm() {
 
   const [errors, setErrors] = useState(initForm);
 
-  const { createResourceAsync: signUpUserAsync, isLoading: isSigningUser } =
-    useCreateResource({
+  const { postResourceAsync: signUpUserAsync, isLoading: isSigningUser } =
+    usePostResource({
       key: RequestKeys.CREATE_USER,
       route: ApiRoutes.post_register,
     });

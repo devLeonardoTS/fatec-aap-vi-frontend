@@ -36,13 +36,13 @@ export function AuthProvider({ children }) {
     const hasAuthCookie = getAuthorizationCookie();
 
     if (user && hasAuthCookie) {
-      console.log("Refreshing Session...");
+      // console.log("Refreshing Session...");
       refresh();
     }
   }, []);
 
   useEffect(() => {
-    console.log("Authenticated User: ", user);
+    // console.log("Authenticated User: ", user);
   }, [user]);
 
   const provided = {
