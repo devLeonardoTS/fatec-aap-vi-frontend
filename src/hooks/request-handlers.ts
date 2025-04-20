@@ -90,7 +90,7 @@ export function useGetResource<T = any>({
     refetch,
     data,
     error,
-    isLoading: isFetching || isPending || isLoading,
+    isLoading: isFetching,
     abort,
   };
 }

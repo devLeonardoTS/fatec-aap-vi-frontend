@@ -37,7 +37,12 @@ export function useAuth() {
     enabled: false,
   });
 
-  async function login({ email, password }) {
+  async function login({
+    email,
+    password,
+    onSuccess = () => {},
+    onError = () => {},
+  }) {
     setLoginFormErrors({});
     setUser(null);
 
@@ -64,6 +69,7 @@ export function useAuth() {
             closeButton: true,
           });
           deleteAuthorizationCookie();
+          onError();
           return;
         }
 
@@ -81,9 +87,9 @@ export function useAuth() {
           closeButton: true,
         });
 
-        if (user) {
-          router.push(NavRoutes.dashboard);
-        }
+        router.push(NavRoutes.dashboard);
+
+        onSuccess();
       })
       .catch((error) => {
         const backendValidationErrors = handleBackendValidations(error);
@@ -92,6 +98,8 @@ export function useAuth() {
           ...prev,
           ...backendValidationErrors,
         }));
+
+        onError();
 
         if (loginFormErrors) {
           toast.update(authToastId, {

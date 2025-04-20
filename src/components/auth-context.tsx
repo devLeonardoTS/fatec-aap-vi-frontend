@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/auth";
 import { getAuthorizationCookie } from "@/lib/utils/api-helpers";
-import { createContext, useContext, useEffect, useLayoutEffect } from "react";
+import { createContext, useContext, useLayoutEffect } from "react";
 
 type AuthContextType = {
   // Define your context properties here
@@ -21,7 +21,12 @@ type AuthContextType = {
   isLoggingIn: boolean;
   loginFormErrors: any;
 
-  login: (credentials: { email: string; password: string }) => any;
+  login: (credentials: {
+    email: string;
+    password: string;
+    onSuccess?: () => void;
+    onError?: () => void;
+  }) => any;
   refresh: () => any;
   logout: () => any;
 };
@@ -41,9 +46,9 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  useEffect(() => {
-    // console.log("Authenticated User: ", user);
-  }, [user]);
+  // useEffect(() => {
+  // console.log("Authenticated User: ", user);
+  // }, [user]);
 
   const provided = {
     isLoggingIn,
