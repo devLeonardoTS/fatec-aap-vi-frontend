@@ -19,16 +19,24 @@ interface DashboardContextType {
   isLoadingDevicesList: boolean;
   isLoadingDevice: boolean;
   isLoadingDeviceCommands: boolean;
+  isLoadingAnalytics: boolean;
   isCreatingCommand: boolean;
-  devicesList: any[];
-  selectedDevice: any | null;
+
+  analytics: any;
+  devicesList: any;
+  deviceDetails: any;
+  deviceCommands: any;
+  selectedDevice: any;
+
   onSelectDevice: (device: any) => void;
   refreshDeviceCommands: () => void;
   refreshDevicesList: () => void;
   refreshDevice: () => any;
+
   handleOpenDevice: () => Promise<any>;
   handleCloseDevice: () => Promise<any>;
   handleVerifyDeviceWaterFlow: () => any;
+
   createCommandAsync: (data: any) => Promise<any>;
 }
 
@@ -103,6 +111,15 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     },
   });
 
+  const {
+    data: analytics,
+    isLoading: isLoadingAnalytics,
+    refetch: refreshAnalytics,
+  } = useGetResource({
+    key: "GET:GENERAL:ANALYTICS",
+    route: ApiRoutes.get_devices_analytics,
+  });
+
   const { data: devicesList } = devicesListRequest || [];
 
   const { data: deviceDetails } = deviceRequest || [];
@@ -111,7 +128,7 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
 
   function onSelectDevice(device: any) {
     setSelectedDevice(device);
-    console.log("Device clicked!", device);
+    console.log("Device clicked!", { selectedDevice, device });
 
     if (isLoadingDevice) return;
 
@@ -212,8 +229,10 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     isLoadingDevicesList,
     isLoadingDevice,
     isLoadingDeviceCommands,
+    isLoadingAnalytics,
     isCreatingCommand,
 
+    analytics,
     devicesList,
     deviceDetails,
     deviceCommands,
@@ -224,6 +243,7 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     refreshDeviceCommands,
     refreshDevicesList,
     refreshDevice,
+    refreshAnalytics,
 
     handleOpenDevice,
     handleCloseDevice,

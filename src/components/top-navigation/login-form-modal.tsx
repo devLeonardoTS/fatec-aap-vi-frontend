@@ -57,9 +57,13 @@ function LoginFormModal({ opened, close: closeModal }) {
     e.preventDefault();
     e.stopPropagation();
 
-    login({ email: formData.email, password: formData.password });
-
-    handleCloseModal();
+    login({
+      email: formData.email,
+      password: formData.password,
+      onSuccess() {
+        handleCloseModal();
+      },
+    });
   }
 
   return (

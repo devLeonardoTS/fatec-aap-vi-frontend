@@ -1,6 +1,12 @@
 "use client";
 
-import { AlertCircle, BarChart, Droplets, TrendingUp } from "lucide-react";
+import {
+  AlertCircle,
+  BarChart,
+  CogIcon,
+  Droplets,
+  TrendingUp,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { ProgressSpinner } from "primereact/progressspinner";
@@ -88,12 +94,11 @@ function SelectedDeviceDetails({ device }) {
             <span className="font-bold">Hidrocontrolador Selecionado</span>
           </h2>
           <p>
-            <span className="font-bold">Nome:</span>
+            {device?.token || "Token não definido"} -{" "}
             {device?.name || "Nome não definido"}
           </p>
-          <p>
-            <span className="font-bold">Token: </span>{" "}
-            {device?.token || "Token não definido"}
+          <p className="line-clamp-1 break-all whitespace-break-spaces">
+            {device?.description || "Descrição não definida"}
           </p>
         </div>
       </div>
@@ -411,7 +416,7 @@ export default function GeneralReportArea() {
       </div>
 
       {/* Cost Simulation Section */}
-      {/* <div className="bg-white rounded-xl shadow-md p-5 border border-gray-100">
+      <div className="bg-white rounded-xl shadow-md p-5 border border-gray-100">
         <div className="flex items-center mb-4">
           <div className="p-2 bg-indigo-50 rounded-lg mr-3">
             <CogIcon className="h-6 w-6 text-indigo-500" />
@@ -459,6 +464,25 @@ export default function GeneralReportArea() {
               className="border rounded-md p-2 border-gray-100 bg-gray-50 focus:outline-gray-200 "
             />
           </div>
+
+          {/* <div className="mb-6 flex-1">
+            <label
+              htmlFor="flow-rate"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Vazão Média (M³/h): {flowRate}
+            </label>
+            <input
+              type="range"
+              id="flow-rate"
+              min="1"
+              max="30"
+              step="0.1"
+              value={flowRate}
+              onChange={(e) => setFlowRate(Number.parseInt(e.target.value))}
+              className="w-full h-2 mt-4 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            />
+          </div> */}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -481,7 +505,7 @@ export default function GeneralReportArea() {
             </p>
           </div>
         </div>
-      </div> */}
+      </div>
     </div>
   );
 }
