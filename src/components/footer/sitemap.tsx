@@ -1,9 +1,14 @@
+import { NavRoutes } from "@/lib/routes/nav.routes";
 import { SiInstagram } from "@icons-pack/react-simple-icons";
 import { LuLinkedin } from "react-icons/lu";
 
-export function Sitemap() {
+export function Sitemap({ isFluid = false }) {
   return (
-    <div className="container mx-auto p-4 pb-0">
+    <div
+      className={`container mx-auto p-4 pb-0 ${
+        isFluid ? "" : "max-w-7xl mx-auto"
+      }`}
+    >
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-white text-center">
         {/* Logo and Contact */}
         <div className="space-y-6">
@@ -54,7 +59,7 @@ export function Sitemap() {
               </a>
             </li>
             <li>
-              <a href="#" className="hover:underline">
+              <a href={NavRoutes.about_us} className="hover:underline">
                 Sobre nós
               </a>
             </li>

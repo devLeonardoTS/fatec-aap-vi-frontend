@@ -1,6 +1,6 @@
 "use client";
 
-import { useCreateResource, useGetResource } from "@/hooks/resources";
+import { useGetResource, usePostResource } from "@/hooks/request-handlers";
 import { ApiRoutes } from "@/lib/routes/api.routes";
 import { useState } from "react";
 
@@ -43,8 +43,8 @@ export default function SimulationPage() {
   //   },
   // });
 
-  const { createResourceAsync: createEventAsync, isLoading: isLoadingCommand } =
-    useCreateResource({
+  const { postResourceAsync: createEventAsync, isLoading: isLoadingCommand } =
+    usePostResource({
       key: "CREATE:COMMAND",
       route: `/queues`,
     });
@@ -71,9 +71,9 @@ export default function SimulationPage() {
   }
 
   const {
-    createResourceAsync: createAverageWaterFlowAsync,
+    postResourceAsync: createAverageWaterFlowAsync,
     isLoading: isLoadingAverageWaterFlow,
-  } = useCreateResource({
+  } = usePostResource({
     key: "CREATE:AVERAGE_WATER_FLOW_REGISTRY",
     route: `/queues/water_flow`,
   });

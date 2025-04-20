@@ -1,11 +1,12 @@
 "use client";
 
 import { Resources } from "@/lib/constants/resources";
+import { NavRoutes } from "@/lib/routes/nav.routes";
 import { ChevronDown, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-export function NavMainRibbon() {
+export function NavMainRibbon({ isFluid = true }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -62,7 +63,11 @@ export function NavMainRibbon() {
 
   return (
     <nav className="p-2">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
+      <div
+        className={`flex justify-between items-center ${
+          isFluid ? "" : "max-w-7xl mx-auto"
+        }`}
+      >
         {/* Logo */}
         <div className="flex-shrink-0">
           <Link href="/" className="flex items-center">
@@ -101,7 +106,7 @@ export function NavMainRibbon() {
             {isDropdownOpen && (
               <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-10 border border-neutral-light">
                 <Link
-                  href="/company"
+                  href={NavRoutes.about_us}
                   className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   onClick={() => setIsDropdownOpen(false)}
                 >

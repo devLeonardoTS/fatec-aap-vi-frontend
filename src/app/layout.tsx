@@ -5,6 +5,8 @@ import type { Metadata } from "next";
 
 import "./globals.css";
 
+import "@mantine/core/styles.css";
+
 export const metadata: Metadata = {
   title: AppConfigs.name,
   description: AppConfigs.description,

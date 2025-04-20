@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { parseAxiosError } from "@/lib/utils/parse-axios-errors";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export type UseGetResourceOptions<T = any> = {
@@ -13,7 +14,7 @@ export type UseGetResourceOptions<T = any> = {
   refetchInterval?: any;
 };
 
-export type UseCreateResource<T = any> = {
+export type UsePostResource<T = any> = {
   key: string;
   route: string;
   onSuccess?: (data: T | any) => void;
@@ -50,7 +51,10 @@ export function useGetResource<T = any>({
 }: UseGetResourceOptions) {
   const controller = new AbortController();
 
-  const { refetch, data, error, isPending, isFetching } = useQuery<T, unknown>({
+  const { refetch, data, error, isPending, isFetching, isLoading } = useQuery<
+    T,
+    unknown
+  >({
     queryKey: [key, query],
     queryFn: async ({ queryKey }) => {
       try {
@@ -86,7 +90,7 @@ export function useGetResource<T = any>({
     refetch,
     data,
     error,
-    isLoading: isFetching || isPending,
+    isLoading: isFetching,
     abort,
   };
 }
@@ -103,13 +107,13 @@ export function useResourceRefresher(key: string) {
   return { refresh };
 }
 
-export function useCreateResource<T = any>({
+export function usePostResource<T = any>({
   key,
   route,
   onSuccess = (data: T) => {},
   onError = (error: any) => {},
   onSettled = (data: T) => {},
-}: UseCreateResource) {
+}: UsePostResource) {
   const controller = new AbortController();
 
   const mutation = useMutation({
@@ -119,8 +123,17 @@ export function useCreateResource<T = any>({
         signal: controller.signal,
       });
     },
-    onSuccess,
-    onError,
+    onSuccess({ data }) {
+      // Dispatch on success cb.
+      onSuccess(data);
+    },
+    onError(error, variables, context) {
+      // Dispatch on error cb.
+
+      // console.log("[Hooks:resources:useCreateResource] - onError:", error);
+
+      if (error?.name === "AxiosError") throw parseAxiosError(error);
+    },
     onSettled: (data, error, variables, context) => {
       onSettled({ data, error, variables, context });
     },
@@ -132,8 +145,8 @@ export function useCreateResource<T = any>({
   }
 
   return {
-    createResource: mutation.mutate,
-    createResourceAsync: mutation.mutateAsync,
+    postResource: mutation.mutate,
+    postResourceAsync: mutation.mutateAsync,
     isLoading: mutation.isPending,
     abort,
   };
