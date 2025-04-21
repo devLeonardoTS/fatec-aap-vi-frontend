@@ -1,6 +1,10 @@
 "use client";
 
-import { useGetResource, usePostResource } from "@/hooks/request-handlers";
+import {
+  useGetResource,
+  usePatchResource,
+  usePostResource,
+} from "@/hooks/request-handlers";
 import { ApiRoutes } from "@/lib/routes/api.routes";
 import { useSessionStore } from "@/stores/session-store";
 import { useRouter } from "next/navigation";
@@ -19,11 +23,15 @@ interface DashboardContextType {
   isLoadingDevicesList: boolean;
   isLoadingDevice: boolean;
   isLoadingDeviceCommands: boolean;
+  isLoadingDeviceAnalytics: boolean;
   isLoadingAnalytics: boolean;
   isCreatingCommand: boolean;
 
   analytics: any;
   devicesList: any;
+  devicesCurrentPage: number;
+  devicesLastPage: number;
+  deviceAnalytics: any;
   deviceDetails: any;
   deviceCommands: any;
   selectedDevice: any;
@@ -33,8 +41,17 @@ interface DashboardContextType {
   refreshDevicesList: () => void;
   refreshDevice: () => any;
 
+  handleDeviceListFilters: ({ filters, page }: any) => void;
+  handleCommandListFilters: ({ filters, page }: any) => void;
+
   handleOpenDevice: () => Promise<any>;
   handleCloseDevice: () => Promise<any>;
+  handleScheduleCommand: ({ payload, onSuccess, onError }: any) => Promise<any>;
+  handleDeviceConfiguration: ({
+    payload,
+    onSuccess,
+    onError,
+  }: any) => Promise<any>;
   handleVerifyDeviceWaterFlow: () => any;
 
   createCommandAsync: (data: any) => Promise<any>;
@@ -54,7 +71,34 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
 
   const { user, setFlashMessage: setMessage } = useSessionStore();
 
+  const [selectedDeviceToken, setSelectedDeviceToken] = useState(null);
+
   const [selectedDevice, setSelectedDevice] = useState(null);
+
+  const deviceListFilterInit = { filters: {}, page: 1 };
+  const [deviceListFilters, setDeviceListFilters] =
+    useState(deviceListFilterInit);
+
+  function handleDeviceListFilters({ filters, page }: any) {
+    setDeviceListFilters((prev) => ({
+      ...prev,
+      filters: filters || prev.filters,
+      page: page || prev.page,
+    }));
+  }
+
+  const commandListFilterInit = { filters: {}, page: 1 };
+  const [commandListFilters, setCommandListFilters] = useState(
+    commandListFilterInit
+  );
+
+  function handleCommandListFilters({ filters, page }: any) {
+    setCommandListFilters((prev) => ({
+      ...prev,
+      filters: filters || prev.filters,
+      page: page || prev.page,
+    }));
+  }
 
   const {
     data: devicesListRequest,
@@ -63,6 +107,7 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
   } = useGetResource({
     key: "GET::DEVICES",
     route: ApiRoutes.get_all_devices,
+    query: deviceListFilters,
   });
 
   const {
@@ -71,8 +116,8 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     refetch: refreshDevice,
   } = useGetResource({
     key: "GET::DEVICE",
-    route: ApiRoutes.get_device(selectedDevice?.token),
-    enabled: false,
+    route: ApiRoutes.get_device(selectedDeviceToken),
+    enabled: Boolean(selectedDeviceToken),
   });
 
   const {
@@ -81,13 +126,27 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     refetch: refreshDeviceCommands,
   } = useGetResource({
     key: "GET:DEVICE:COMMANDS",
-    route: ApiRoutes.get_device_commands(selectedDevice?.token),
-    enabled: Boolean(selectedDevice?.data),
-    query: {
-      filters: {
-        listing_type: "executed",
-      },
-    },
+    route: ApiRoutes.get_device_commands(selectedDeviceToken),
+    enabled: Boolean(selectedDeviceToken),
+    refetchInterval: 5 * 1000,
+    query: commandListFilters,
+  });
+
+  const {
+    data: deviceAnalyticsRequest,
+    isLoading: isLoadingDeviceAnalytics,
+    refetch: refreshDeviceAnalytics,
+  } = useGetResource({
+    key: "GET:DEVICE:ANALYTICS",
+    route: ApiRoutes.get_device_analytics(selectedDeviceToken),
+    enabled: Boolean(selectedDeviceToken),
+    refetchInterval: 5 * 1000,
+
+    // query: {
+    //   filters: {
+    //     listing_type: "executed",
+    //   },
+    // },
   });
 
   function refreshDeviceStates() {
@@ -112,6 +171,17 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
   });
 
   const {
+    patchResourceAsync: patchDeviceAsync,
+    isLoading: isLoadingDeviceConfiguration,
+  } = usePatchResource({
+    key: "PATCH:DEVICE",
+    route: ApiRoutes.patch_device(selectedDevice?.token),
+    onSuccess({ data }) {
+      refreshDeviceStates();
+    },
+  });
+
+  const {
     data: analytics,
     isLoading: isLoadingAnalytics,
     refetch: refreshAnalytics,
@@ -120,32 +190,56 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     route: ApiRoutes.get_devices_analytics,
   });
 
-  const { data: devicesList } = devicesListRequest || [];
+  const { data: devicesList, last_page: devicesLastPage } =
+    devicesListRequest || [];
 
   const { data: deviceDetails } = deviceRequest || [];
 
-  const { data: deviceCommands } = deviceCommandsRequest || {};
+  const { data: deviceCommands } = deviceCommandsRequest?.data || {};
+
+  const { data: deviceAnalytics } = deviceAnalyticsRequest || {};
 
   function onSelectDevice(device: any) {
-    setSelectedDevice(device);
-    console.log("Device clicked!", { selectedDevice, device });
-
-    if (isLoadingDevice) return;
-
-    if (selectedDevice?.token === device?.token) {
+    if (selectedDeviceToken === device.token) {
       setSelectedDevice(null);
+      setSelectedDeviceToken(null);
       return;
     }
 
-    console.log("Fetching device...");
+    console.log("device", device);
 
-    setTimeout(() => {
-      refreshDevice().then(({ data }) => {
-        console.log("Device fetched", data);
-        const refreshedSelectedDevice = data?.data;
-        setSelectedDevice(refreshedSelectedDevice);
-      });
-    }, 1000);
+    const toastId = toast.loading("Carregando dados do dispositivo...");
+
+    setSelectedDeviceToken(device?.token);
+
+    setTimeout(async () => {
+      refreshDevice()
+        .then(({ data }) => {
+          console.log("Device fetched", data);
+          const refreshedSelectedDevice = data?.data;
+          setSelectedDevice(refreshedSelectedDevice);
+
+          toast.update(toastId, {
+            type: "success",
+            render: "Dados do dispositivo carregados com sucesso",
+            isLoading: false,
+            autoClose: 5000,
+            closeOnClick: true,
+          });
+        })
+        .catch(() => {
+          toast.update(toastId, {
+            type: "error",
+            render: "Erro ao carregar dados do dispositivo",
+            isLoading: false,
+            autoClose: 5000,
+            closeOnClick: true,
+          });
+        });
+
+      refreshDeviceCommands();
+      refreshDeviceAnalytics();
+    }, 200);
   }
 
   async function handleOpenDevice() {
@@ -208,6 +302,81 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     });
   }
 
+  async function handleScheduleCommand({
+    payload,
+    onSuccess = () => {},
+    onError = () => {},
+  }: any) {
+    const toastId = toast.loading("Agendando comando...");
+
+    if (isCreatingCommand) return;
+
+    try {
+      await createCommandAsync({
+        ...payload,
+        device_id: selectedDevice?.id,
+      });
+    } catch (error) {
+      onError();
+      toast.update(toastId, {
+        type: "error",
+        render:
+          "Não foi possível agendar o comando... Tente novamente em alguns segundos.",
+        isLoading: false,
+        autoClose: 5000,
+      });
+    }
+
+    refreshDeviceCommands();
+
+    onSuccess();
+
+    toast.update(toastId, {
+      type: "success",
+      render: "Comando agendado com sucesso.",
+      isLoading: false,
+      autoClose: 5000,
+    });
+  }
+
+  async function handleDeviceConfiguration({
+    payload,
+    onSuccess = () => {},
+    onError = () => {},
+  }: any) {
+    const toastId = toast.loading(
+      "Atualizando configurações do dispositivo..."
+    );
+
+    if (isCreatingCommand) return;
+
+    try {
+      await patchDeviceAsync({
+        ...payload,
+      });
+    } catch (error) {
+      onError();
+      toast.update(toastId, {
+        type: "error",
+        render:
+          "Não foi possível atulizar as configurações... Tente novamente em alguns segundos.",
+        isLoading: false,
+        autoClose: 5000,
+      });
+    }
+
+    refreshDevice();
+
+    onSuccess();
+
+    toast.update(toastId, {
+      type: "success",
+      render: "Configurações atualizadas com sucesso.",
+      isLoading: false,
+      autoClose: 5000,
+    });
+  }
+
   async function handleVerifyDeviceWaterFlow() {
     if (isCreatingCommand) return;
 
@@ -229,11 +398,15 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     isLoadingDevicesList,
     isLoadingDevice,
     isLoadingDeviceCommands,
+    isLoadingDeviceAnalytics,
     isLoadingAnalytics,
     isCreatingCommand,
 
     analytics,
     devicesList,
+    devicesCurrentPage: deviceListFilters.page,
+    devicesLastPage,
+    deviceAnalytics,
     deviceDetails,
     deviceCommands,
     selectedDevice,
@@ -245,9 +418,14 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     refreshDevice,
     refreshAnalytics,
 
+    handleDeviceListFilters,
+    handleCommandListFilters,
+
     handleOpenDevice,
     handleCloseDevice,
+    handleScheduleCommand,
     handleVerifyDeviceWaterFlow,
+    handleDeviceConfiguration,
 
     createCommandAsync,
   };

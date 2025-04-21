@@ -24,7 +24,7 @@ export type UsePostResource<T = any> = {
 
 export type UsePatchResource<T = any> = {
   key: string;
-  route: (id: string) => string;
+  route: string;
   onSuccess?: (data: T | any) => void;
   onError?: (error: any) => void;
   onSettled?: (data: T | any) => void;
@@ -164,7 +164,7 @@ export function usePatchResource<T = any>({
   const mutation = useMutation({
     mutationKey: [key],
     mutationFn: ({ id, ...data }: { id: string; [key: string]: any }) => {
-      return api.patch(route(id), data, {
+      return api.patch(route, data, {
         signal: controller.signal,
       });
     },
