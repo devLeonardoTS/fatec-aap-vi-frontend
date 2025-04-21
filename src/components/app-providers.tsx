@@ -10,6 +10,8 @@ import { FlashProvider } from "./_injectors/flash-provider";
 import { HydrationVerifier } from "./_injectors/hydration-verifier";
 import { AuthProvider } from "./auth-context";
 
+import "primereact/resources/themes/bootstrap4-light-blue/theme.css";
+
 /** Detalhe dos Wrappers que envolvem a aplicação.
  *
  * - StrictMode: força a aplica o a renderizar novamente em modo de

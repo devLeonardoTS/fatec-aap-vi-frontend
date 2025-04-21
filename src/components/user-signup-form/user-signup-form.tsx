@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useGetResource, usePostResource } from "@/hooks/request-handlers";
+import { usePostResource } from "@/hooks/request-handlers";
 import { RequestKeys } from "@/lib/constants/request-keys";
 import { ApiRoutes } from "@/lib/routes/api.routes";
 import Link from "next/link";
@@ -106,7 +106,7 @@ export function UserSignUpForm() {
           ...backendValidations,
         }));
 
-        if (errors) return;
+        // if (errors) return;
 
         // If no validation errors, show generic error message.
         toast.error(
@@ -140,16 +140,6 @@ export function UserSignUpForm() {
 
     handleSignUp(formData);
   }
-
-  const {
-    data: protectedData,
-    isLoading: isLoadingProtected,
-    refetch,
-  } = useGetResource({
-    key: "ANY:PROTECTED",
-    route: "/protected",
-    // enabled: false,
-  });
 
   useLayoutEffect(() => {
     if (user) router.push(NavRoutes.home);
