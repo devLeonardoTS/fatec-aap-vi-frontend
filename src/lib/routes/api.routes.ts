@@ -34,4 +34,13 @@ export const ApiRoutes = {
   delete_device_command: (token: string, command_id: string) =>
     `/devices/${token}/commands/${command_id}`,
   delete_all_device_commands: (token: string) => `/devices/${token}/commands`,
+
+  // Tickets routes
+  get_all_tickets: `/tickets`,
+  get_ticket: (id: string) => `/tickets/${id}`,
+  get_ticket_comments: (id: string) => `/tickets/${id}/comments`,
+  post_ticket_comment: (id: string) => `/tickets/${id}/comments`,
+  post_ticket: `/tickets`,
+  patch_ticket: (id: string) => `/tickets/${id}`,
+  delete_ticket: (id: string) => `/tickets/${id}`,
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useGetResource } from "@/hooks/request-handlers";
+import { useGetResource, usePostResource } from "@/hooks/request-handlers";
 import { ApiRoutes } from "@/lib/routes/api.routes";
 import { Modal } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -11,7 +11,10 @@ import {
   ChevronRight,
   Droplets,
   ListIcon,
+  MessageCircleMoreIcon,
   SearchIcon,
+  SendIcon,
+  TicketIcon,
   TrendingUp,
   WavesIcon,
 } from "lucide-react";
@@ -19,7 +22,7 @@ import { Calendar } from "primereact/calendar";
 import { Dropdown } from "primereact/dropdown";
 import { InputText } from "primereact/inputtext";
 import { Ripple } from "primereact/ripple";
-import { FormEvent, useEffect, useLayoutEffect, useState } from "react";
+import { FormEvent, Fragment, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import {
   Bar,
@@ -31,6 +34,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useAuthContext } from "../auth-context";
 import { useDashboardContext } from "./dashboard-context";
 
 const DashboardNavigationMenu = [
@@ -120,8 +124,13 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
       pages.push(totalPages);
     }
 
-    return pages;
+    // Remove null values
+    return pages.filter(Boolean);
   };
+
+  useEffect(() => {
+    console.log("pages", generatePageNumbers());
+  }, []);
 
   return (
     <div className="flex items-center justify-center gap-1 text-sm mt-4">
@@ -213,7 +222,8 @@ function TotalFlowCard({}) {
       </div>
       <div className="flex flex-col justify-center items-center">
         <p className="text-3xl font-bold text-gray-800 text-center">
-          {total_water_flow_today} <span className="text-lg">L</span>
+          {(total_water_flow_today * 1).toFixed(2)}{" "}
+          <span className="text-lg">L</span>
         </p>
         <p className="text-sm text-gray-500">
           Utilize o simulador para calcular custos
@@ -1111,40 +1121,495 @@ function UserHydrocontrollerArea() {
   );
 }
 
+function TicketsTable({}) {
+  const {
+    ticketsList,
+    isLoadingTicketList,
+    refreshTicketList,
+    onSelectTicket,
+    selectedTicket,
+  } = useDashboardContext();
+
+  useEffect(() => {
+    refreshTicketList();
+  }, []);
+
+  return (
+    <div className="rounded border max-h-[270px] overflow-auto custom-scrollbar relative">
+      <table className="w-full table-auto rounded bg-gradient-to-b from-gray-50 to-white">
+        <thead className="bg-gradient-to-r from-blue-500 to-blue-600 text-white sticky top-0 z-10">
+          <tr className="[&>th]:px-4 [&>th]:py-1 text-left text-sm font-medium">
+            <th className="w-[16%] truncate">Status</th>
+            <th className="w-[16%] truncate">Titulo</th>
+            <th className="w-[16%] truncate">Descrição</th>
+            <th className="w-[16%] truncate">Criado em</th>
+            <th className="w-[16%] truncate">Última atualização</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-200">
+          {(!ticketsList?.length || isLoadingTicketList) && (
+            <tr className="transition-colors duration-200 ease-in-out hover:bg-blue-50 [&>td]:px-4 [&>td]:py-1 [&>td]:text-nowrap [&>td]:break-all">
+              <td colSpan={5} className="text-center py-2 text-gray-500">
+                {isLoadingTicketList
+                  ? "Carregando..."
+                  : "Nenhum ticket encontrado..."}
+              </td>
+            </tr>
+          )}
+
+          {!isLoadingTicketList &&
+            ticketsList?.length > 0 &&
+            ticketsList?.map((ticket, index) => {
+              const title = ticket?.title || "Título não definido";
+              const status = ticket?.status || "Status não definido";
+              const description =
+                ticket?.description || "Descrição não definida";
+              const createdAt =
+                ticket?.created_at || "Data de criação não definida";
+              const updatedAt =
+                ticket?.updated_at || "Data de atualização não definida";
+
+              const isSelected = selectedTicket?.id === ticket?.id;
+
+              return (
+                <tr
+                  key={index}
+                  className={`transition-colors duration-200 ease-in-out hover:bg-blue-50 [&>td]:px-4 [&>td]:py-2 [&>td]:text-nowrap [&>td]:break-all hover:cursor-pointer ${
+                    isSelected ? "font-bold" : ""
+                  }`}
+                  onClick={() => onSelectTicket(ticket)}
+                >
+                  <td className="text-sm text-gray-600 truncate border-r">
+                    {status}
+                  </td>
+                  <td className="text-sm text-gray-600 truncate border-r">
+                    {title}
+                  </td>
+                  <td className="text-sm text-gray-600 truncate border-r">
+                    {description}
+                  </td>
+                  <td className="text-sm text-gray-600 border-r">
+                    <p className="m-0 p-0 truncate">
+                      {new Intl.DateTimeFormat("pt-BR", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      }).format(new Date(createdAt))}
+                    </p>
+                  </td>
+                  <td className="text-sm text-gray-600 border-r">
+                    <p className="m-0 p-0 truncate">
+                      {new Intl.DateTimeFormat("pt-BR", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      }).format(new Date(updatedAt))}
+                    </p>
+                  </td>
+                </tr>
+              );
+            })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function NewTicketFormModal({ isOpen, onClose }) {
+  const { handleRegisterTicket } = useDashboardContext();
+
+  const initForm = {
+    title: "",
+    description: "",
+  };
+
+  const [formData, setFormData] = useState(initForm);
+
+  function handleChange(name: keyof typeof formData, value: any) {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+
+  function handleCloseModal() {
+    onClose();
+    setFormData(initForm);
+  }
+
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (Object.values(formData).some((value) => !value)) {
+      toast.error("Todos os campos devem ser preenchidos");
+      return;
+    }
+
+    const payload = {
+      ...formData,
+    };
+
+    handleRegisterTicket({ payload, onSuccess: handleCloseModal });
+  }
+
+  return (
+    <Modal
+      opened={isOpen}
+      onClose={handleCloseModal}
+      withCloseButton={false}
+      centered
+      closeOnClickOutside={false}
+      classNames={{
+        body: "border border-4 border-neutral-light rounded-md p-4",
+      }}
+    >
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        <div className="flex gap-2 justify-between items-end">
+          <h2 className="text-2xl font-bold">Novo Ticket</h2>
+          <p className="text-gray-600 text-sm">Descreva a situação</p>
+        </div>
+        <div className="flex flex-col gap-4 p-2 border rounded">
+          <label htmlFor="title">
+            <span className="font-semibold px-2">Título</span>
+            <InputText
+              id="title"
+              value={formData.title}
+              onChange={(e) => handleChange("title", e.target.value)}
+              className="w-full border rounded-md p-2"
+            />
+          </label>
+          <label htmlFor="description">
+            <span className="font-semibold px-2">Descrição</span>
+            <InputText
+              id="description"
+              value={formData.description}
+              onChange={(e) => handleChange("description", e.target.value)}
+              className="w-full border rounded-md p-2"
+            />
+          </label>
+        </div>
+
+        <div className="flex gap-3 flex-wrap sm:flex-nowrap">
+          <DashboardMenuButton label="Registrar" type="submit" />
+          <DashboardMenuButton
+            label="Cancelar"
+            type="button"
+            onClick={handleCloseModal}
+          />
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+function HandleNewTicketButton() {
+  const [opened, { open, close }] = useDisclosure(false);
+
+  return (
+    <>
+      <DashboardMenuButton label="Novo Ticket" onClick={open} />
+      <NewTicketFormModal isOpen={opened} onClose={close} />
+    </>
+  );
+}
+
+function TicketDetails() {
+  const { ticketDetails, isLoadingTicketDetails, handleChangeTicketStatus } =
+    useDashboardContext();
+
+  return (
+    <div className="bg-white rounded-xl shadow-md p-5 border col-span-2 md:col-span-1 border-gray-100 transition-all hover:shadow-lg">
+      <div className="flex items-center">
+        <div className="p-2 bg-blue-50 rounded-lg mr-3">
+          <TicketIcon className="h-6 w-6 text-blue-500" />
+        </div>
+        <div className="w-full">
+          <div>
+            <h3 className="font-semibold text-gray-700">
+              #{ticketDetails?.id} - Ticket:{" "}
+              {ticketDetails?.title || "Título não definido"}
+            </h3>
+            <p className="text-xs text-neutral-700">
+              Criado em:{" "}
+              {ticketDetails?.created_at
+                ? new Intl.DateTimeFormat("pt-BR", {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  }).format(new Date(ticketDetails.created_at))
+                : "Data não disponível"}
+            </p>
+            <p className="text-xs text-neutral-700">
+              Última atualização:{" "}
+              {ticketDetails?.updated_at
+                ? new Intl.DateTimeFormat("pt-BR", {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  }).format(new Date(ticketDetails.updated_at))
+                : "Data não disponível"}
+            </p>
+          </div>
+        </div>
+        <div className="text-xs px-2 py-1 rounded-full">
+          {ticketDetails?.status === "Aberto" ? (
+            <span className="bg-green-50 text-green-600 px-2 py-1">Aberto</span>
+          ) : (
+            <span className="bg-orange-50 text-orange-600 px-2 py-1">
+              Encerrado
+            </span>
+          )}
+          {!ticketDetails?.status && (
+            <span className="bg-gray-50 text-gray-600 px-2 py-1">
+              Status não definido
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-2">
+        <DashboardMenuButton
+          label={
+            ticketDetails?.status === "Aberto"
+              ? "Encerrar Ticket"
+              : "Reabrir Ticket"
+          }
+          onClick={handleChangeTicketStatus}
+        />
+      </div>
+
+      <hr className="my-2" />
+
+      <div className="flex flex-col gap-2 border rounded-md p-4 shadow-md">
+        <h3 className="font-semibold text-gray-700">Descrição</h3>
+        <hr />
+        <p className="text-neutral-700">
+          {ticketDetails?.description || "Detalhes não foram definidos"}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function ChatComment({ comment }: any) {
+  const { user } = useAuthContext();
+
+  const { comment: content, user_id, created_at } = comment;
+
+  const user_fullname =
+    comment?.user?.profile?.full_name || "Usuário não identificado";
+
+  const reversed = user_id === user?.id;
+
+  return (
+    <div
+      className={`flex ${
+        reversed ? "justify-end" : "justify-start"
+      } my-2 w-full`}
+    >
+      <div
+        className={`
+          max-w-[80%] 
+          rounded-2xl 
+          px-4 
+          py-3 
+          shadow-sm
+          ${
+            reversed
+              ? "bg-blue-500 text-white rounded-br-none"
+              : "bg-gray-100 text-gray-800 rounded-bl-none"
+          }
+        `}
+      >
+        <div className="flex items-center mb-1">
+          <p className="font-medium text-sm">{user_fullname}</p>
+        </div>
+        <p className={`${reversed ? "text-white" : "text-gray-700"}`}>
+          {content}
+        </p>
+        <p
+          className={`text-xs mt-1 ${
+            reversed ? "text-blue-100 text-end" : "text-gray-500"
+          }`}
+        >
+          {created_at
+            ? new Intl.DateTimeFormat("pt-BR", {
+                dateStyle: "short",
+                timeStyle: "short",
+              }).format(new Date(created_at))
+            : "Data não disponível"}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function TicketChat() {
+  const [message, setMessage] = useState("");
+
+  const {
+    selectedTicket,
+    ticketComments,
+    isLoadingTicketComments,
+    refreshTicketComments,
+  } = useDashboardContext();
+
+  const { postResourceAsync: sendCommentAsync, isLoading: isSendingComment } =
+    usePostResource({
+      key: "POST:TICKET:COMMENT",
+      route: ApiRoutes.post_ticket_comment(selectedTicket?.id),
+      onSuccess: () => {
+        refreshTicketComments();
+      },
+    });
+
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    if (!message) {
+      return;
+    }
+
+    toast.promise(
+      sendCommentAsync({
+        comment: message,
+      }),
+      {
+        pending: "Enviando mensagem...",
+        success: "Mensagem enviada com sucesso",
+        error: "Erro ao enviar mensagem",
+      }
+    );
+  }
+
+  const chatAreaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (chatAreaRef.current) {
+      chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
+    }
+  }, [ticketComments]);
+
+  return (
+    <div className="bg-white rounded-xl shadow-md p-5 border col-span-2 md:col-span-1 border-gray-100 transition-all hover:shadow-lg relative custom-scrollbar">
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center">
+          <div className="p-2 bg-blue-50 rounded-lg mr-3">
+            <MessageCircleMoreIcon className="h-6 w-6 text-blue-500" />
+          </div>
+          <div className="w-full">
+            <div>
+              <h3 className="font-semibold text-gray-700">Fale conosco</h3>
+            </div>
+          </div>
+        </div>
+        {/* Chat Area */}
+        <div className="flex flex-col gap-2 w-full border rounded p-2">
+          <div
+            ref={chatAreaRef}
+            className="flex flex-col gap-2 p-2 max-h-[270px] overflow-auto custom-scrollbar"
+          >
+            {!ticketComments?.length && <p>Nenhuma mensagem encontrada</p>}
+            {ticketComments?.map((comment, index) => (
+              <Fragment key={index}>
+                <ChatComment comment={comment} />
+              </Fragment>
+            ))}
+          </div>
+        </div>
+        {/* Chatbox */}
+        <div>
+          <form onSubmit={handleSubmit} className="flex gap-2">
+            <div className="w-full">
+              <InputText
+                className="w-full p-2 border border-gray-300 rounded"
+                placeholder="Digite sua mensagem"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+              />
+            </div>
+            <div className="self-center">
+              <button
+                type="submit"
+                className="relative overflow-hidden w-full p-2 px-4 border rounded-md shadow-md transition-all hover:bg-blue-100"
+              >
+                <Ripple
+                  pt={{
+                    root: {
+                      className: "bg-blue-200",
+                    },
+                  }}
+                />
+                <SendIcon className="h-4 w-4 text-blue-500" />
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SupportArea() {
+  const {
+    selectedTicket,
+    isLoadingTicketDetails,
+    handleTicketListFilters,
+    ticketsCurrentPage,
+    ticketsLastPage,
+    refreshTicketList,
+  } = useDashboardContext();
+
+  function updateFilters(search: string) {
+    handleTicketListFilters({
+      filters: {
+        global: search,
+      },
+    });
+
+    refreshTicketList();
+  }
+
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-2xl font-bold mb-2">
-        Suporte - Estamos Trabalhando nessa Área
+      <h2 className="text-2xl font-bold border rounded-md shadow-md p-2">
+        Área de Suporte
       </h2>
+
+      <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-[auto_1fr] gap-4">
+          <div className="border rounded p-2 w-full col-span-full md:col-span-1">
+            <HandleNewTicketButton />
+          </div>
+          <div className="col-span-full md:col-span-1 overflow-auto">
+            <div className="p-1">
+              <GlobalSearchForm updateFilters={updateFilters} />
+            </div>
+            <TicketsTable />
+            <Pagination
+              currentPage={ticketsCurrentPage}
+              totalPages={ticketsLastPage}
+              onPageChange={() => {}}
+            />
+          </div>
+        </div>
+        {selectedTicket && (
+          <div className="grid grid-cols-2 gap-4">
+            {isLoadingTicketDetails ? (
+              <p>Carregando...</p>
+            ) : (
+              <>
+                <TicketDetails />
+                <TicketChat />
+              </>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
 export function DashboardForUsers() {
   // Handles navigation state throughout the dashboard.
-  const [selectedMenu, setSelectedMenu] = useState(() => {
-    const hash = decodeURIComponent(window.location.hash.substring(1));
-    return DashboardNavigationMenu.includes(hash)
-      ? hash
-      : DashboardNavigationMenu[0];
-  });
-
-  // Ensure component shown is correct even when forcing navigation through URL
-  useLayoutEffect(() => {
-    const handleHashChange = () => {
-      const hash = decodeURIComponent(window.location.hash.substring(1));
-      setSelectedMenu(
-        DashboardNavigationMenu.includes(hash)
-          ? hash
-          : DashboardNavigationMenu[0]
-      );
-    };
-
-    window.addEventListener("hashchange", handleHashChange);
-
-    return () => window.removeEventListener("hashchange", handleHashChange);
-  }, []);
+  const [selectedMenu, setSelectedMenu] = useState(DashboardNavigationMenu[0]);
 
   return (
     <div className="flex flex-col gap-4 m-4 p-4 border rounded">
@@ -1155,7 +1620,6 @@ export function DashboardForUsers() {
             label={label}
             onClick={() => {
               setSelectedMenu(label);
-              window.location.hash = `#${label}`;
             }}
           />
         ))}
