@@ -48,7 +48,7 @@ export function NavUserRibbon({ isFluid = false }) {
     <nav className="p-2 px-4">
       <div
         className={`flex justify-between items-center text-sm ${
-          isFluid ? "" : "max-w-7xl mx-auto"
+          isFluid ? "" : "mx-auto"
         }`}
       >
         <p>

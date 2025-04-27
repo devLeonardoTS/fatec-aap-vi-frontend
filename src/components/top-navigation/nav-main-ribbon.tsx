@@ -62,7 +62,7 @@ export function NavMainRibbon({ isFluid = true }) {
   }, []);
 
   return (
-    <nav className="p-2">
+    <nav className="relative p-2">
       <div
         className={`flex justify-between items-center ${
           isFluid ? "" : "max-w-7xl mx-auto"
@@ -160,21 +160,21 @@ export function NavMainRibbon({ isFluid = true }) {
             className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
             onClick={() => setIsOpen(false)}
           >
-            Home
+            Início
           </Link>
           <Link
             href="/products"
             className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
             onClick={() => setIsOpen(false)}
           >
-            Products
+            Compra
           </Link>
           <Link
             href="/support"
             className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
             onClick={() => setIsOpen(false)}
           >
-            Support
+            Recursos
           </Link>
 
           {/* Resources section in mobile menu */}
@@ -186,7 +186,7 @@ export function NavMainRibbon({ isFluid = true }) {
                 className="block px-3 py-2 rounded-md text-base text-gray-700 hover:text-gray-900 hover:bg-gray-50"
                 onClick={() => setIsOpen(false)}
               >
-                Conheça a Empresa
+                Sobre nós
               </Link>
               <Link
                 href="/product"
@@ -201,32 +201,6 @@ export function NavMainRibbon({ isFluid = true }) {
                 onClick={() => setIsOpen(false)}
               >
                 Ajuda
-              </Link>
-              <Link
-                href="/admin"
-                className="block px-3 py-2 rounded-md text-base text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-                onClick={() => setIsOpen(false)}
-              >
-                Administração
-              </Link>
-            </div>
-          </div>
-
-          <div className="pt-4 pb-3 border-t border-gray-200">
-            <div className="flex items-center px-3 space-x-3">
-              <Link
-                href="/learn"
-                className="block w-full px-4 py-2 border border-gray-800 text-center text-sm font-medium rounded-md text-gray-800 hover:bg-gray-50"
-                onClick={() => setIsOpen(false)}
-              >
-                Learn
-              </Link>
-              <Link
-                href="/signup"
-                className="block w-full px-4 py-2 border border-transparent text-center text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800"
-                onClick={() => setIsOpen(false)}
-              >
-                Sign Up
               </Link>
             </div>
           </div>

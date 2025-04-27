@@ -26,6 +26,9 @@ interface DashboardContextType {
   isLoadingDeviceAnalytics: boolean;
   isLoadingAnalytics: boolean;
   isCreatingCommand: boolean;
+  isLoadingTicketList: boolean;
+  isLoadingTicketDetails: boolean;
+  isLoadingTicketComments: boolean;
 
   analytics: any;
   devicesList: any;
@@ -36,13 +39,26 @@ interface DashboardContextType {
   deviceCommands: any;
   selectedDevice: any;
 
+  ticketsList;
+  ticketsCurrentPage: number;
+  ticketsLastPage: number;
+  ticketDetails: any;
+  ticketComments: any;
+
   onSelectDevice: (device: any) => void;
   refreshDeviceCommands: () => void;
   refreshDevicesList: () => void;
   refreshDevice: () => any;
+  refreshTicketComments: () => void;
+
+  selectedTicket: any;
+  onSelectTicket: (ticket: any) => void;
+  refreshTicketList: () => void;
+  refreshTicketDetails: () => any;
 
   handleDeviceListFilters: ({ filters, page }: any) => void;
   handleCommandListFilters: ({ filters, page }: any) => void;
+  handleTicketListFilters: ({ filters, page }: any) => void;
 
   handleOpenDevice: () => Promise<any>;
   handleCloseDevice: () => Promise<any>;
@@ -52,7 +68,10 @@ interface DashboardContextType {
     onSuccess,
     onError,
   }: any) => Promise<any>;
+  handleRegisterTicket: ({ payload, onSuccess, onError }: any) => Promise<any>;
   handleVerifyDeviceWaterFlow: () => any;
+
+  handleChangeTicketStatus: () => any;
 
   createCommandAsync: (data: any) => Promise<any>;
 }
@@ -72,13 +91,14 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
   const { user, setFlashMessage: setMessage } = useSessionStore();
 
   const [selectedDeviceToken, setSelectedDeviceToken] = useState(null);
-
   const [selectedDevice, setSelectedDevice] = useState(null);
+
+  const [selectedTicketId, setSelectedTicketId] = useState(null);
+  const [selectedTicket, setSelectedTicket] = useState(null);
 
   const deviceListFilterInit = { filters: {}, page: 1 };
   const [deviceListFilters, setDeviceListFilters] =
     useState(deviceListFilterInit);
-
   function handleDeviceListFilters({ filters, page }: any) {
     setDeviceListFilters((prev) => ({
       ...prev,
@@ -91,9 +111,19 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
   const [commandListFilters, setCommandListFilters] = useState(
     commandListFilterInit
   );
-
   function handleCommandListFilters({ filters, page }: any) {
     setCommandListFilters((prev) => ({
+      ...prev,
+      filters: filters || prev.filters,
+      page: page || prev.page,
+    }));
+  }
+
+  const ticketListFilterInit = { filters: {}, page: 1 };
+  const [ticketListFilters, setTicketListFilters] =
+    useState(ticketListFilterInit);
+  function handleTicketListFilters({ filters, page }: any) {
+    setTicketListFilters((prev) => ({
       ...prev,
       filters: filters || prev.filters,
       page: page || prev.page,
@@ -133,6 +163,17 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
   });
 
   const {
+    data: ticketListRequest,
+    isLoading: isLoadingTicketList,
+    refetch: refreshTicketList,
+  } = useGetResource({
+    key: "GET:TICKETS",
+    route: ApiRoutes.get_all_tickets,
+    enabled: false,
+    query: ticketListFilters,
+  });
+
+  const {
     data: deviceAnalyticsRequest,
     isLoading: isLoadingDeviceAnalytics,
     refetch: refreshDeviceAnalytics,
@@ -145,6 +186,33 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     // query: {
     //   filters: {
     //     listing_type: "executed",
+    //   },
+    // },
+  });
+
+  const {
+    data: ticketDetailsRequest,
+    isLoading: isLoadingTicketDetails,
+    refetch: refreshTicketDetails,
+  } = useGetResource({
+    key: `GET:TICKET:DETAILS`,
+    route: ApiRoutes.get_ticket(selectedTicketId),
+    enabled: Boolean(selectedTicketId),
+  });
+
+  const {
+    data: ticketCommentsRequest,
+    isLoading: isLoadingTicketComments,
+    refetch: refreshTicketComments,
+  } = useGetResource({
+    key: `GET:TICKET:COMMENTS`,
+    route: ApiRoutes.get_ticket_comments(selectedTicketId),
+    enabled: Boolean(selectedTicketId),
+    refetchInterval: 30 * 1000,
+    // query: {
+    //   filters: {
+    //     order_by: "created_at",
+    //     direction: "asc",
     //   },
     // },
   });
@@ -170,6 +238,15 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     },
   });
 
+  const { postResourceAsync: createTicketAsync, isLoading: isCreatingTicket } =
+    usePostResource({
+      key: "POST:DEVICE:COMMAND",
+      route: ApiRoutes.post_ticket,
+      onSuccess({ data }) {
+        refreshDeviceStates();
+      },
+    });
+
   const {
     patchResourceAsync: patchDeviceAsync,
     isLoading: isLoadingDeviceConfiguration,
@@ -180,6 +257,15 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
       refreshDeviceStates();
     },
   });
+
+  const { patchResourceAsync: patchTicketAsync, isLoading: isPatchingTicket } =
+    usePatchResource({
+      key: "PATCH:TICKET",
+      route: ApiRoutes.patch_ticket(selectedTicket?.id),
+      onSuccess({ data }) {
+        refreshDeviceStates();
+      },
+    });
 
   const {
     data: analytics,
@@ -198,6 +284,13 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
   const { data: deviceCommands } = deviceCommandsRequest?.data || {};
 
   const { data: deviceAnalytics } = deviceAnalyticsRequest || {};
+
+  const { data: ticketsList, last_page: ticketsLastPage } =
+    ticketListRequest || {};
+
+  const { data: ticketDetails } = ticketDetailsRequest || {};
+
+  const { data: ticketComments } = ticketCommentsRequest || {};
 
   function onSelectDevice(device: any) {
     if (selectedDeviceToken === device.token) {
@@ -239,6 +332,46 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
 
       refreshDeviceCommands();
       refreshDeviceAnalytics();
+    }, 200);
+  }
+
+  function onSelectTicket(ticket: any) {
+    if (selectedTicket && selectedTicket.id === ticket.id) {
+      setSelectedTicketId(null);
+      setSelectedTicket(null);
+      return;
+    }
+
+    const toastId = toast.loading("Carregando dados do ticket...");
+
+    setSelectedTicketId(ticket.id);
+
+    setTimeout(async () => {
+      refreshTicketDetails()
+        .then(({ data }) => {
+          // console.log("Device fetched", data);
+          const refreshedTicket = data?.data;
+          setSelectedTicket(refreshedTicket);
+
+          toast.update(toastId, {
+            type: "success",
+            render: "Dados do ticket carregados com sucesso",
+            isLoading: false,
+            autoClose: 5000,
+            closeOnClick: true,
+          });
+        })
+        .catch(() => {
+          toast.update(toastId, {
+            type: "error",
+            render: "Erro ao carregar dados do ticket",
+            isLoading: false,
+            autoClose: 5000,
+            closeOnClick: true,
+          });
+        });
+
+      refreshTicketComments();
     }, 200);
   }
 
@@ -394,6 +527,74 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     );
   }
 
+  async function handleRegisterTicket({
+    payload,
+    onSuccess = () => {},
+    onError = () => {},
+  }: any) {
+    const toastId = toast.loading("Registrando Ticket...");
+
+    if (isCreatingTicket) return;
+
+    try {
+      await createTicketAsync({
+        ...payload,
+      });
+    } catch (error) {
+      onError();
+      toast.update(toastId, {
+        type: "error",
+        render:
+          "Não foi possível registrar o Ticket... Tente novamente em alguns segundos.",
+        isLoading: false,
+        autoClose: 5000,
+      });
+    }
+
+    refreshTicketList();
+
+    onSuccess();
+
+    toast.update(toastId, {
+      type: "success",
+      render: "Ticket registrado com sucesso.",
+      isLoading: false,
+      autoClose: 5000,
+    });
+  }
+
+  async function handleChangeTicketStatus() {
+    const toastId = toast.loading("Atualizando status do Ticket...");
+
+    if (!selectedTicket) return;
+    if (isPatchingTicket) return;
+
+    try {
+      await patchTicketAsync({
+        status: selectedTicket.status === "Aberto" ? "Fechado" : "Aberto",
+        id: selectedTicket?.id,
+      });
+    } catch (error) {
+      toast.update(toastId, {
+        type: "error",
+        render:
+          "Não foi possível atualizar o status do ticket... Tente novamente em alguns segundos.",
+        isLoading: false,
+        autoClose: 5000,
+      });
+    }
+
+    refreshTicketList();
+    refreshTicketDetails();
+
+    toast.update(toastId, {
+      type: "success",
+      render: "Ticket atualizado com sucesso",
+      isLoading: false,
+      autoClose: 5000,
+    });
+  }
+
   const provided = {
     isLoadingDevicesList,
     isLoadingDevice,
@@ -401,6 +602,9 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     isLoadingDeviceAnalytics,
     isLoadingAnalytics,
     isCreatingCommand,
+    isLoadingTicketList,
+    isLoadingTicketDetails,
+    isLoadingTicketComments,
 
     analytics,
     devicesList,
@@ -409,9 +613,21 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     deviceAnalytics,
     deviceDetails,
     deviceCommands,
-    selectedDevice,
 
+    ticketsList,
+    ticketsCurrentPage: ticketListFilters.page,
+    ticketsLastPage,
+    ticketDetails,
+    ticketComments,
+
+    selectedDevice,
     onSelectDevice,
+
+    selectedTicket,
+    onSelectTicket,
+    refreshTicketList,
+    refreshTicketDetails,
+    refreshTicketComments,
 
     refreshDeviceCommands,
     refreshDevicesList,
@@ -420,12 +636,16 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
 
     handleDeviceListFilters,
     handleCommandListFilters,
+    handleTicketListFilters,
 
     handleOpenDevice,
     handleCloseDevice,
     handleScheduleCommand,
     handleVerifyDeviceWaterFlow,
     handleDeviceConfiguration,
+    handleRegisterTicket,
+
+    handleChangeTicketStatus,
 
     createCommandAsync,
   };
